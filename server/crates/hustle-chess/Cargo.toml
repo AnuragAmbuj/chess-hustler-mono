@@ -1,0 +1,10 @@
+[package]
+name = "hustle-chess"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+shakmaty = "0.30"
+
+[dev-dependencies]
