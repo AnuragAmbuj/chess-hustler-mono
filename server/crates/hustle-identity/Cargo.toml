@@ -1,0 +1,22 @@
+[package]
+name = "hustle-identity"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+async-trait = { workspace = true }
+hustle-gold = { path = "../hustle-gold" }
+rand = "0.9"
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = "0.10"
+sqlx = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true }
+tracing = { workspace = true }
+jsonwebtoken = { workspace = true }
+uuid = { workspace = true }
+
+[dev-dependencies]
+hustle-testkit = { path = "../hustle-testkit" }
+tokio = { workspace = true }

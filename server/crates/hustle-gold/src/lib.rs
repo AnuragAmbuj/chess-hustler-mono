@@ -153,7 +153,7 @@ impl PgGoldLedger {
                 reason: op.reason.as_str().to_string(),
             });
         }
-        Self::ensure_row(&mut **tx, op.user_id).await?;
+        Self::ensure_row(tx, op.user_id).await?;
 
         // Serialize per user; the row lock is what makes concurrent grants safe.
         let current: i64 =

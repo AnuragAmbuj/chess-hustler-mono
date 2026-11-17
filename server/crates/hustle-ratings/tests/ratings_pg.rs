@@ -2,7 +2,6 @@
 
 use hustle_domain::Pool;
 use hustle_ratings::{Outcome, PgRatingApplier, RatingApplier};
-use sqlx;
 
 #[tokio::test]
 async fn white_win_moves_both_ratings_and_writes_history() {

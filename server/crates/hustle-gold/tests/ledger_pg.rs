@@ -1,7 +1,6 @@
 //! L3 integration tests — real Postgres via hustle-testkit (skips when unset).
 
 use hustle_gold::{GoldLedger, GoldReason, GrantResult, LedgerError, LedgerOp, PgGoldLedger};
-use sqlx;
 
 fn op(user: i64, delta: i64, reason: GoldReason, idem: Option<&str>) -> LedgerOp {
     LedgerOp {

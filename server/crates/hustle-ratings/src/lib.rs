@@ -179,8 +179,8 @@ impl RatingApplier for PgRatingApplier {
         } else {
             (black_id, white_id)
         };
-        let a = Self::fetch_for_update(&mut *tx, a_id, pool).await?;
-        let b = Self::fetch_for_update(&mut *tx, b_id, pool).await?;
+        let a = Self::fetch_for_update(tx, a_id, pool).await?;
+        let b = Self::fetch_for_update(tx, b_id, pool).await?;
         let (white, black) = if a_id == white_id { (a, b) } else { (b, a) };
 
         let white_after = ratings::update(
@@ -199,9 +199,9 @@ impl RatingApplier for PgRatingApplier {
         );
 
         let white_delta =
-            Self::write_player(&mut *tx, game_id, white_id, pool, white, white_after).await?;
+            Self::write_player(tx, game_id, white_id, pool, white, white_after).await?;
         let black_delta =
-            Self::write_player(&mut *tx, game_id, black_id, pool, black, black_after).await?;
+            Self::write_player(tx, game_id, black_id, pool, black, black_after).await?;
 
         Ok(match (white_delta, black_delta) {
             (Some(w), Some(b)) => Some(AppliedRatings { white: w, black: b }),
