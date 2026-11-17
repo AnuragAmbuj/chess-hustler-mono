@@ -1,0 +1,17 @@
+[package]
+name = "hustle-api"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+axum = { workspace = true }
+hustle-domain = { path = "../hustle-domain" }
+hustle-kernel = { path = "../hustle-kernel" }
+http = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+http-body-util = { workspace = true }
+tokio = { workspace = true }
+tower = { workspace = true }

@@ -1,0 +1,100 @@
+# Chess Hustle CI (ADR-012). Path-filtered: server/migrations/contracts/web jobs
+# only run when their trees change. Release pipeline (image push + deploy) lands
+# with staging credentials (owner action item, docs/07 §1).
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  server:
+    name: server (fmt · clippy · tests · contract drift)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: "rustfmt, clippy"
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: server
+      - name: rustfmt
+        run: cargo fmt --all --check
+        working-directory: server
+      - name: clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+        working-directory: server
+      - name: tests (unit + contract drift + api smoke)
+        run: cargo test --workspace
+        working-directory: server
+
+  migrations:
+    name: migrations (postgres 16)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply schema v1
+        run: |
+          psql "postgresql://postgres:postgres@localhost:5432/hustle" \
+            -v ON_ERROR_STOP=1 -f server/migrations/0001_init.sql
+      - name: Verify seeds + key constraints exist
+        run: |
+          psql "postgresql://postgres:postgres@localhost:5432/hustle" -v ON_ERROR_STOP=1 <<'SQL'
+          SELECT COUNT(*) FROM app_config;                 -- must be 12 seeded keys
+          SELECT COUNT(*) FROM feature_flags;             -- must be 3
+          SELECT COUNT(*) FROM cosmetics;                 -- must be 4
+          SELECT conname FROM pg_constraint WHERE conname = 'games_result_iff_finished';
+          SQL
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: hustle
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+  contracts:
+    name: contracts (redocly lint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint OpenAPI
+        run: npx --yes @redocly/cli@1.34.0 lint contracts/openapi.yaml
+
+  web:
+    name: web (typecheck · build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  docker:
+    name: docker (server image builds)
+    runs-on: ubuntu-latest
+    needs: server
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build server image
+        run: docker build -f infra/docker/server.Dockerfile -t hustle-server:ci .

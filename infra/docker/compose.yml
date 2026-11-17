@@ -1,0 +1,64 @@
+# Local development environment (docs/07-infrastructure/plan.md §1).
+# Usage: docker compose -f infra/docker/compose.yml up --build
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: hustle
+      POSTGRES_DB: hustle
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../../server/migrations:/migrations:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hustle"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    image: postgres:16-alpine
+    command: >
+      psql "postgresql://postgres:hustle@postgres:5432/hustle"
+      -v ON_ERROR_STOP=1 -f /migrations/0001_init.sql
+    volumes:
+      - ../../server/migrations:/migrations:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  server:
+    build:
+      context: ../..
+      dockerfile: infra/docker/server.Dockerfile
+    environment:
+      CH_ENV: local
+      CH_PORT: "8080"
+    ports:
+      - "8080:8080"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    image: node:22-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run dev -- --host"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../../web:/app
+    depends_on:
+      - server
+
+volumes:
+  pgdata: {}

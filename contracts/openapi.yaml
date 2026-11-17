@@ -1,0 +1,137 @@
+openapi: 3.1.0
+info:
+  title: Chess Hustle API
+  version: 0.1.0
+  description: >-
+    Phase 0 skeleton (health/ready/meta). Phase 1 expands per
+    docs/03-api/rest.md. Drift gate: adding a route to hustle-api without
+    adding it here fails CI (tests/contract_drift.rs), and vice versa.
+servers:
+  - url: http://localhost:8080
+    description: local
+paths:
+  /:
+    get:
+      operationId: getRoot
+      summary: Service banner
+      tags:
+        - meta
+      responses:
+        '200':
+          description: Service banner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Banner'
+  /healthz:
+    get:
+      operationId: getHealthz
+      summary: Liveness (process up; never checks dependencies)
+      tags:
+        - meta
+      responses:
+        '200':
+          description: Alive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /readyz:
+    get:
+      operationId: getReadyz
+      summary: Readiness (dependency checks land in Phase 1)
+      tags:
+        - meta
+      responses:
+        '200':
+          description: Ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+  /v1/meta/config:
+    get:
+      operationId: getMetaConfig
+      summary: Public client boot config (economy display values, ad rules, TC presets)
+      tags:
+        - meta
+      responses:
+        '200':
+          description: Boot config
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetaConfig'
+components:
+  schemas:
+    Status:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+            - ready
+    Banner:
+      type: object
+      required:
+        - service
+        - version
+      properties:
+        service:
+          type: string
+          const: chess-hustle
+        version:
+          type: string
+    MetaConfig:
+      type: object
+      required:
+        - server_time_unix_ms
+        - economy
+        - ads
+        - time_controls
+      properties:
+        server_time_unix_ms:
+          type: integer
+        economy:
+          type: object
+          required:
+            - welcome_gold
+          properties:
+            welcome_gold:
+              type: integer
+        ads:
+          type: object
+          required:
+            - gold_per_ad
+            - max_per_day
+            - cooldown_s
+          properties:
+            gold_per_ad:
+              type: integer
+            max_per_day:
+              type: integer
+            cooldown_s:
+              type: integer
+        time_controls:
+          type: array
+          items:
+            type: object
+            required:
+              - initial_s
+              - increment_s
+              - pool
+            properties:
+              initial_s:
+                type: integer
+              increment_s:
+                type: integer
+              pool:
+                type: string
+                enum:
+                  - bullet
+                  - blitz
+                  - rapid
+                  - classical

@@ -1,0 +1,10 @@
+# Kubernetes base (Kustomize) — Phase 0 skeleton; production hardening
+# (HPA, PDB, network policies, CloudNativePG) lands with Phase 1 (docs/07).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: hustle
+resources:
+  - namespace.yml
+  - configmap.yml
+  - deployment.yml
+  - service.yml

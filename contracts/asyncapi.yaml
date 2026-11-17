@@ -1,0 +1,68 @@
+asyncapi: 2.6.0
+info:
+  title: Chess Hustle Realtime
+  version: 0.1.0
+  description: >-
+    Phase 0 skeleton. The normative event catalog lives in
+    docs/03-api/websocket.md §4; concrete game/economy messages are added here
+    in Phase 1 alongside the WS implementation. Envelope is already normative
+    (ADR-004): channel-scoped Redis Streams, resume by stream id.
+servers:
+  - url: wss://api.localhost/ws
+    protocol: ws
+    description: WebSocket endpoint (ticket-authenticated, Phase 1)
+channels:
+  'u/{userId}':
+    parameters:
+      userId:
+        schema:
+          type: string
+    subscribe:
+      summary: Personal stream — economy, invites, friends, notifications (24h retention)
+      message:
+        $ref: '#/components/messages/Envelope'
+  'g/{gameId}':
+    parameters:
+      gameId:
+        schema:
+          type: string
+    subscribe:
+      summary: Game stream — move/result events with monotonic version (finish + 24h retention)
+      message:
+        $ref: '#/components/messages/Envelope'
+  't/{tournamentId}':
+    parameters:
+      tournamentId:
+        schema:
+          type: string
+    subscribe:
+      summary: Tournament stream — rounds, pairings, standings
+      message:
+        $ref: '#/components/messages/Envelope'
+components:
+  messages:
+    Envelope:
+      summary: Normative server→client envelope (websocket.md §2)
+      payload:
+        type: object
+        required:
+          - id
+          - ts
+          - ch
+          - type
+          - data
+        properties:
+          id:
+            type: string
+            description: Redis stream ID of the channel — the resume cursor
+          ts:
+            type: string
+            format: date-time
+          ch:
+            type: string
+            description: "u:<user_id> | g:<game_id> | t:<tournament_id>"
+          type:
+            type: string
+            description: namespaced event type; unknown types are ignored (forward compat)
+          data:
+            type: object

@@ -1,0 +1,19 @@
+# Rust
+target/
+**/*.rs.bk
+
+# Node
+node_modules/
+dist/
+package-lock.json.bak
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.DS_Store
+*.swp
+.idea/
+.vscode/

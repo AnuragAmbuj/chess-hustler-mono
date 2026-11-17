@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hustle-server
+  namespace: hustle
+spec:
+  selector:
+    app: hustle-server
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

@@ -1,0 +1,12 @@
+[package]
+name = "hustle-server"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+anyhow = { workspace = true }
+axum = { workspace = true }
+hustle-api = { path = "../hustle-api" }
+hustle-kernel = { path = "../hustle-kernel" }
+tokio = { workspace = true }
+tracing = { workspace = true }
