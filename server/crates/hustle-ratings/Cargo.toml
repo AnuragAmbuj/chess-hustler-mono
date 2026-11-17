@@ -1,0 +1,16 @@
+[package]
+name = "hustle-ratings"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+async-trait = { workspace = true }
+hustle-domain = { path = "../hustle-domain" }
+sqlx = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+hustle-testkit = { path = "../hustle-testkit" }
+tokio = { workspace = true }
