@@ -13,6 +13,16 @@ use shakmaty::{fen::Fen, Board, CastlingMode, Chess, Color, EnPassantMode, Posit
 /// The platform's only starting position.
 pub const STARTING_FEN: &str = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
+/// Extracts the 4-field repetition key from a FEN string (placement, turn, castling, ep).
+pub fn fen_key(fen: &str) -> String {
+    let mut key = String::with_capacity(80);
+    for field in fen.split_whitespace().take(4) {
+        key.push_str(field);
+        key.push(' ');
+    }
+    key
+}
+
 /// Termination reasons — string values MUST match the `games.termination`
 /// CHECK constraint (`server/migrations/0001_init.sql`) and lifecycle §2.3.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -204,12 +214,7 @@ impl RulesEngine {
     /// FEN prefix key for repetition detection: placement, turn, castling, ep.
     fn key_of(pos: &Chess) -> String {
         let fen = Fen::from_position(pos, EnPassantMode::Legal).to_string();
-        let mut key = String::with_capacity(80);
-        for field in fen.split_whitespace().take(4) {
-            key.push_str(field);
-            key.push(' ');
-        }
-        key
+        fen_key(&fen)
     }
 
     /// Mate-capability approximation for timeout resolution (lifecycle §3,

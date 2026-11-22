@@ -17,3 +17,7 @@ package-lock.json.bak
 *.swp
 .idea/
 .vscode/
+
+# Agent skills
+.agents/
+skills-lock.json

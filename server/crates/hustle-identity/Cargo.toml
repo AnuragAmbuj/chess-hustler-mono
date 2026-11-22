@@ -15,6 +15,7 @@ thiserror = { workspace = true }
 time = { workspace = true }
 tracing = { workspace = true }
 jsonwebtoken = { workspace = true }
+ulid = { workspace = true }
 uuid = { workspace = true }
 
 [dev-dependencies]

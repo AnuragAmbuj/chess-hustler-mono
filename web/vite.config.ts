@@ -1,12 +1,11 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { mockApiPlugin } from './src/mockApi';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), mockApiPlugin()],
   server: {
-    proxy: {
-      // Dev proxy to hustle-server (Phase 0: meta/config).
-      '/v1': 'http://localhost:8080',
-    },
+    host: '0.0.0.0',
+    port: 5173,
   },
 });

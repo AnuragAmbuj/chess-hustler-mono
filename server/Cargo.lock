@@ -306,6 +306,9 @@ name = "deranged"
 version = "0.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e9de72ce2ad1f90dc62fa25f0f430ef85eb4b0d8fa0be4f30373bc40a21d28e"
+dependencies = [
+ "serde_core",
+]
 
 [[package]]
 name = "digest"
@@ -721,26 +724,98 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
 
 [[package]]
+name = "hustle-ads"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "base64",
+ "ecdsa",
+ "hustle-domain",
+ "hustle-gold",
+ "hustle-identity",
+ "hustle-kernel",
+ "hustle-testkit",
+ "p256",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sqlx",
+ "thiserror",
+ "time",
+ "tokio",
+ "tracing",
+ "ulid",
+]
+
+[[package]]
 name = "hustle-api"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "axum",
+ "base64",
  "http",
  "http-body-util",
+ "hustle-ads",
+ "hustle-chess",
+ "hustle-cosmetics",
  "hustle-domain",
+ "hustle-friends",
+ "hustle-gold",
+ "hustle-identity",
  "hustle-kernel",
+ "hustle-matchmaking",
+ "hustle-moderation",
+ "hustle-ratings",
+ "hustle-realtime",
+ "hustle-rewards",
+ "hustle-testkit",
+ "hustle-tournaments",
+ "hyper",
+ "hyper-util",
+ "redis",
  "serde",
  "serde_json",
+ "sha1",
+ "sqlx",
+ "time",
  "tokio",
  "tower",
+ "tracing",
+ "ulid",
 ]
 
 [[package]]
 name = "hustle-chess"
 version = "0.1.0"
 dependencies = [
+ "hustle-domain",
+ "hustle-gold",
+ "hustle-ratings",
  "serde",
+ "serde_json",
  "shakmaty",
+ "sqlx",
+ "thiserror",
+ "time",
+ "ulid",
+]
+
+[[package]]
+name = "hustle-cosmetics"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "hustle-gold",
+ "hustle-identity",
+ "hustle-testkit",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror",
+ "time",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -751,12 +826,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "hustle-friends"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "hustle-chess",
+ "hustle-domain",
+ "hustle-realtime",
+ "hustle-testkit",
+ "redis",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror",
+ "time",
+ "tokio",
+ "tracing",
+ "ulid",
+]
+
+[[package]]
 name = "hustle-gold"
 version = "0.1.0"
 dependencies = [
  "async-trait",
  "hustle-domain",
  "hustle-testkit",
+ "serde",
  "serde_json",
  "sqlx",
  "thiserror",
@@ -782,6 +878,7 @@ dependencies = [
  "time",
  "tokio",
  "tracing",
+ "ulid",
  "uuid",
 ]
 
@@ -791,6 +888,44 @@ version = "0.1.0"
 dependencies = [
  "tracing",
  "tracing-subscriber",
+]
+
+[[package]]
+name = "hustle-matchmaking"
+version = "0.1.0"
+dependencies = [
+ "hustle-chess",
+ "hustle-domain",
+ "hustle-testkit",
+ "redis",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "ulid",
+]
+
+[[package]]
+name = "hustle-moderation"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "hustle-chess",
+ "hustle-domain",
+ "hustle-identity",
+ "hustle-realtime",
+ "hustle-testkit",
+ "redis",
+ "serde",
+ "serde_json",
+ "shakmaty",
+ "sqlx",
+ "thiserror",
+ "time",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -808,6 +943,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "hustle-realtime"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "hustle-testkit",
+ "redis",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "time",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+ "ulid",
+]
+
+[[package]]
+name = "hustle-rewards"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "hustle-gold",
+ "hustle-identity",
+ "hustle-testkit",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror",
+ "time",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "hustle-server"
 version = "0.1.0"
 dependencies = [
@@ -815,6 +985,7 @@ dependencies = [
  "axum",
  "hustle-api",
  "hustle-kernel",
+ "sqlx",
  "tokio",
  "tracing",
 ]
@@ -827,6 +998,25 @@ dependencies = [
  "redis",
  "sqlx",
  "tokio",
+ "ulid",
+]
+
+[[package]]
+name = "hustle-tournaments"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "hustle-domain",
+ "hustle-gold",
+ "hustle-identity",
+ "hustle-testkit",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror",
+ "time",
+ "tokio",
+ "tracing",
  "ulid",
 ]
 

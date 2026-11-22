@@ -1,0 +1,19 @@
+[package]
+name = "hustle-matchmaking"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+hustle-chess = { path = "../hustle-chess" }
+hustle-domain = { path = "../hustle-domain" }
+redis = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sqlx = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+ulid = { workspace = true }
+
+[dev-dependencies]
+hustle-testkit = { path = "../hustle-testkit" }

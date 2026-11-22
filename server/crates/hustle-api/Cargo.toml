@@ -4,14 +4,39 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+async-trait = { workspace = true }
 axum = { workspace = true }
+base64 = "0.22"
+sha1 = "0.10"
+hustle-ads = { path = "../hustle-ads" }
+hustle-chess = { path = "../hustle-chess" }
+hustle-cosmetics = { path = "../hustle-cosmetics" }
 hustle-domain = { path = "../hustle-domain" }
+hustle-friends = { path = "../hustle-friends" }
+hustle-gold = { path = "../hustle-gold" }
+hustle-identity = { path = "../hustle-identity" }
 hustle-kernel = { path = "../hustle-kernel" }
+hustle-matchmaking = { path = "../hustle-matchmaking" }
+hustle-moderation = { path = "../hustle-moderation" }
+hustle-ratings = { path = "../hustle-ratings" }
+hustle-realtime = { path = "../hustle-realtime" }
+hustle-rewards = { path = "../hustle-rewards" }
+hustle-tournaments = { path = "../hustle-tournaments" }
 http = { workspace = true }
+hyper = { version = "1", features = ["server", "http1"] }
+hyper-util = { version = "0.1", features = ["tokio"] }
+redis = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+sqlx = { workspace = true }
+time = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+ulid = { workspace = true }
 
 [dev-dependencies]
+async-trait = { workspace = true }
+hustle-testkit = { path = "../hustle-testkit" }
 http-body-util = { workspace = true }
 tokio = { workspace = true }
 tower = { workspace = true }

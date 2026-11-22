@@ -1,0 +1,23 @@
+[package]
+name = "hustle-moderation"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+async-trait = { workspace = true }
+hustle-realtime = { path = "../hustle-realtime" }
+redis = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+shakmaty = "0.30"
+sqlx = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+hustle-chess = { path = "../hustle-chess" }
+hustle-domain = { path = "../hustle-domain" }
+hustle-identity = { path = "../hustle-identity" }
+hustle-testkit = { path = "../hustle-testkit" }

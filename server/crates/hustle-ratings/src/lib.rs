@@ -220,6 +220,38 @@ pub struct RatingRow {
     pub peak: f32,
 }
 
+/// One pool's rating as served in profile/self payloads.
+#[derive(Debug, Clone, Copy)]
+pub struct PoolRating {
+    pub pool: Pool,
+    pub rating: f32,
+    pub rd: f32,
+    pub games_count: i32,
+}
+
+/// All rating rows a user has (missing pools are simply absent — callers
+/// present the 1200/350 defaults for them).
+pub async fn get_all(pool: &PgPool, user_id: i64) -> Result<Vec<PoolRating>, sqlx::Error> {
+    let rows: Vec<(String, f32, f32, i32)> = sqlx::query_as(
+        "SELECT pool, rating, rd, games_count FROM ratings WHERE user_id = $1 ORDER BY pool",
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .filter_map(|(p, rating, rd, games_count)| {
+            let pool = Pool::parse(&p)?;
+            Some(PoolRating {
+                pool,
+                rating,
+                rd,
+                games_count,
+            })
+        })
+        .collect())
+}
+
 pub async fn get(
     pool: &PgPool,
     user_id: i64,

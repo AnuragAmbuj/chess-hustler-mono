@@ -1,0 +1,19 @@
+[package]
+name = "hustle-cosmetics"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+async-trait = { workspace = true }
+hustle-gold = { path = "../hustle-gold" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sqlx = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+hustle-identity = { path = "../hustle-identity" }
+hustle-testkit = { path = "../hustle-testkit" }

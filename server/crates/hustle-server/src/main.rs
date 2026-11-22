@@ -18,7 +18,13 @@ async fn main() -> anyhow::Result<()> {
 
     let host = config.host.clone();
     let port = config.port;
-    let state = AppState { config };
+    let pool = sqlx::postgres::PgPoolOptions::new()
+        .max_connections(16)
+        .acquire_timeout(std::time::Duration::from_secs(5))
+        .connect(&config.database_url)
+        .await?;
+    tracing::info!("postgres pool ready");
+    let state = AppState::build(config, pool);
     let app = router(state);
 
     let addr = format!("{host}:{port}");

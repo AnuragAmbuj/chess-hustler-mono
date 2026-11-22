@@ -2,13 +2,10 @@
 
 use http_body_util::BodyExt;
 use hustle_api::{router, AppState};
-use hustle_kernel::ServerConfig;
 use tower::ServiceExt;
 
 fn app() -> axum::Router {
-    router(AppState {
-        config: ServerConfig::from_env(),
-    })
+    router(AppState::test_stub())
 }
 
 async fn get_body(uri: &str) -> (u16, String) {

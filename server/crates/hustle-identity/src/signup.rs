@@ -56,6 +56,7 @@ fn default_true() -> bool {
 #[derive(Debug, Clone, Deserialize)]
 pub struct ProfileInput {
     pub handle: String,
+    #[serde(default)]
     pub display_name: String,
 }
 
@@ -123,7 +124,8 @@ impl SignupService {
 
         let mut tx = self.pool.begin().await?;
 
-        // 1) user (idempotent on identity conflict; `inserted` tells us new)
+        // 1) user (idempotent on identity conflict; `inserted` tells us new).
+        // `public_id` is the only id serialized to clients (rest.md §1).
         let (user_id, mut is_new_user) = match &identity {
             VerifiedIdentity::Phone(phone) => {
                 if !crate::is_e164(phone) {
@@ -131,26 +133,28 @@ impl SignupService {
                 }
                 sqlx::query_as::<_, (i64, i32)>(
                     "WITH u AS (
-                       INSERT INTO users (phone_e164, age_confirmed_at)
-                       VALUES ($1, now())
+                       INSERT INTO users (phone_e164, age_confirmed_at, public_id)
+                       VALUES ($1, now(), $2)
                        ON CONFLICT (phone_e164) DO UPDATE SET age_confirmed_at = now()
                        RETURNING id, (xmax = 0)::int AS inserted
                      ) SELECT id, inserted FROM u",
                 )
                 .bind(phone)
+                .bind(ulid::Ulid::new().to_string())
                 .fetch_one(&mut *tx)
                 .await
                 .map(|(id, inserted)| (id, inserted == 1))?
             }
             VerifiedIdentity::Google(sso) => sqlx::query_as::<_, (i64, i32)>(
                 "WITH u AS (
-                       INSERT INTO users (email, age_confirmed_at)
-                       VALUES ($1, now())
+                       INSERT INTO users (email, age_confirmed_at, public_id)
+                       VALUES ($1, now(), $2)
                        ON CONFLICT (email) DO UPDATE SET age_confirmed_at = now()
                        RETURNING id, (xmax = 0)::int AS inserted
                      ) SELECT id, inserted FROM u",
             )
             .bind(&sso.email)
+            .bind(ulid::Ulid::new().to_string())
             .fetch_one(&mut *tx)
             .await
             .map(|(id, inserted)| (id, inserted == 1))?,

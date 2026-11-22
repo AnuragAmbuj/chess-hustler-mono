@@ -62,7 +62,1785 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MetaConfig'
+  /v1/auth/otp/send:
+    post:
+      operationId: postAuthOtpSend
+      summary: Send SMS OTP
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpSendRequest'
+      responses:
+        '204':
+          description: OTP sent
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/auth/otp/verify:
+    post:
+      operationId: postAuthOtpVerify
+      summary: Verify SMS OTP and complete signup/login
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpVerifyRequest'
+      responses:
+        '200':
+          description: Token pair and user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/auth/refresh:
+    post:
+      operationId: postAuthRefresh
+      summary: Rotate refresh token and issue new access token
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Rotated token pair
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/auth/logout:
+    post:
+      operationId: postAuthLogout
+      summary: Revoke current session
+      tags:
+        - auth
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Current session revoked
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/auth/logout-all:
+    post:
+      operationId: postAuthLogoutAll
+      summary: Revoke all sessions for the authenticated user
+      tags:
+        - auth
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: All sessions revoked
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/me:
+    get:
+      operationId: getMe
+      summary: Current user profile, balances, settings, ratings
+      tags:
+        - me
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMe'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+    patch:
+      operationId: patchMe
+      summary: Update profile or user settings
+      tags:
+        - me
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchMeRequest'
+      responses:
+        '200':
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMe'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      operationId: deleteMe
+      summary: Request DPDP account erasure with 30-day grace period
+      tags:
+        - me
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Deletion scheduled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletionScheduledResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/me/deletion-cancel:
+    post:
+      operationId: postMeDeletionCancel
+      summary: Cancel pending deletion request within grace period
+      tags:
+        - me
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Deletion request cancelled
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/me/export:
+    get:
+      operationId: getMeExport
+      summary: Export personal data bundle under DPDP Act right to access
+      tags:
+        - me
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Personal data export bundle
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataExportResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/me/gold:
+    get:
+      operationId: getMeGold
+      summary: Balance and paginated ledger history
+      tags:
+        - me
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 25
+      responses:
+        '200':
+          description: Gold balance and ledger history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoldLedgerPage'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/me/daily:
+    get:
+      operationId: getDailyStreak
+      summary: Daily streak status and next reward
+      tags:
+        - rewards
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Daily streak status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyStreakResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/me/daily/claim:
+    post:
+      operationId: claimDailyStreak
+      summary: Claim daily streak reward
+      tags:
+        - rewards
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Daily streak claim result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyClaimResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/me/gold/summary:
+    get:
+      operationId: getGoldSummary
+      summary: Gold balance and 30-day breakdown
+      tags:
+        - rewards
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Gold summary and breakdown
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoldSummaryResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/me/missions:
+    get:
+      operationId: getMyMissions
+      summary: Retrieve active daily and weekly missions
+      tags:
+        - rewards
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of active missions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MissionItem'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/me/missions/{id}/claim:
+    post:
+      operationId: claimMission
+      summary: Claim completed mission reward
+      tags:
+        - rewards
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Mission claim result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimMissionResult'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/me/achievements:
+    get:
+      operationId: getMyAchievements
+      summary: Retrieve milestone achievements with user progress
+      tags:
+        - rewards
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of milestone achievements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AchievementItem'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/players/{handle}:
+    get:
+      operationId: getPlayerProfile
+      summary: Public player profile
+      tags:
+        - players
+      parameters:
+        - name: handle
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Public player profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerProfile'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/players/{handle}/games:
+    get:
+      operationId: getPlayerGames
+      summary: Public rated and casual games feed for player
+      tags:
+        - players
+      parameters:
+        - name: handle
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 25
+      responses:
+        '200':
+          description: Public player games feed page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerGamesPage'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/matchmaking/queue:
+    post:
+      operationId: joinMatchmakingQueue
+      summary: Join matchmaking queue
+      tags:
+        - matchmaking
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueueJoinRequest'
+      responses:
+        '202':
+          description: Enqueued into matchmaking
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueJoinResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+    delete:
+      operationId: leaveMatchmakingQueue
+      summary: Leave matchmaking queue
+      tags:
+        - matchmaking
+      security:
+        - BearerAuth: []
+      responses:
+        '204':
+          description: Successfully left queue
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/matchmaking/status:
+    get:
+      operationId: getMatchmakingStatus
+      summary: Get matchmaking queue status
+      tags:
+        - matchmaking
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current queue status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchmakingStatusResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/realtime/ticket:
+    get:
+      operationId: getRealtimeTicket
+      summary: Obtain single-use 30s WebSocket ticket
+      description: Returns a single-use token to pass as ?ticket= query param to /ws
+      tags:
+        - realtime
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Ticket issued successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RealtimeTicketResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/games/{id}:
+    get:
+      operationId: getGame
+      summary: Full game snapshot
+      description: Returns full game snapshot including FEN, clocks, players, status, and move plies
+      tags:
+        - games
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Full game snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameSnapshot'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/games/{id}/moves:
+    get:
+      operationId: getGameMoves
+      summary: List of plies played
+      tags:
+        - games
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 25
+      responses:
+        '200':
+          description: Move plies page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameMovesPage'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/games/{id}/pgn:
+    get:
+      operationId: getGamePgn
+      summary: Export game in PGN format
+      tags:
+        - games
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Game in PGN format
+          content:
+            application/x-chess-pgn:
+              schema:
+                type: string
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/games/{id}/resign:
+    post:
+      operationId: resignGame
+      summary: Resign active game
+      tags:
+        - games
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Game resigned outcome
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameResignResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/games/{id}/draw-offer:
+    post:
+      operationId: drawOffer
+      summary: Offer a draw to opponent
+      tags:
+        - games
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Draw offered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DrawOfferResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/games/{id}/draw-accept:
+    post:
+      operationId: drawAccept
+      summary: Accept opponent's draw offer
+      tags:
+        - games
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Game drawn by mutual agreement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameResignResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/games/{id}/draw-decline:
+    post:
+      operationId: drawDecline
+      summary: Decline opponent's draw offer
+      tags:
+        - games
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Draw declined
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DrawOfferResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/games/{id}/abort:
+    post:
+      operationId: abortGame
+      summary: Abort game (valid <= 4 plies)
+      tags:
+        - games
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Game aborted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameAbortResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/games/{id}/claim-timeout:
+    post:
+      operationId: claimTimeout
+      summary: Claim win or draw when opponent clock expires
+      tags:
+        - games
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Game finished on timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameResignResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/friends:
+    get:
+      operationId: getFriends
+      summary: List accepted friends with live presence
+      tags:
+        - friends
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of friends
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FriendInfo'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/friends/requests:
+    get:
+      operationId: getFriendRequests
+      summary: List pending incoming and outgoing friend requests
+      tags:
+        - friends
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Pending friend requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FriendRequestsResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      operationId: sendFriendRequest
+      summary: Send friend request by handle
+      tags:
+        - friends
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HandleRequest'
+      responses:
+        '201':
+          description: Friend request created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FriendRequestItem'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/friends/requests/{id}/accept:
+    post:
+      operationId: acceptFriendRequest
+      summary: Accept a friend request
+      tags:
+        - friends
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Request accepted
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/friends/requests/{id}/decline:
+    post:
+      operationId: declineFriendRequest
+      summary: Decline a friend request
+      tags:
+        - friends
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Request declined
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/friends/{id}:
+    delete:
+      operationId: deleteFriend
+      summary: Remove friendship
+      tags:
+        - friends
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Friend removed
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/blocks:
+    get:
+      operationId: getBlocks
+      summary: List blocked users
+      tags:
+        - friends
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of blocked users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BlockedUserItem'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      operationId: blockUser
+      summary: Block user by handle
+      tags:
+        - friends
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HandleRequest'
+      responses:
+        '201':
+          description: User blocked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlockedUserItem'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/blocks/{handle}:
+    delete:
+      operationId: unblockUser
+      summary: Unblock user by handle
+      tags:
+        - friends
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: handle
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: User unblocked
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/challenge:
+    post:
+      operationId: createChallenge
+      summary: Create direct challenge
+      tags:
+        - friends
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChallengeRequest'
+      responses:
+        '201':
+          description: Challenge created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectChallenge'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/challenge/{id}/accept:
+    post:
+      operationId: acceptChallenge
+      summary: Accept direct challenge
+      tags:
+        - friends
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Challenge accepted and game created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  game_id:
+                    type: string
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/challenge/{id}/decline:
+    post:
+      operationId: declineChallenge
+      summary: Decline direct challenge
+      tags:
+        - friends
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Challenge declined
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/reports:
+    post:
+      operationId: submitReport
+      summary: Submit safety or fair-play report
+      tags:
+        - moderation
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReportRequest'
+      responses:
+        '201':
+          description: Report submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportItem'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/grievance:
+    get:
+      operationId: getGrievanceInfo
+      summary: India IT Rules 2021 Grievance Officer information
+      tags:
+        - moderation
+      responses:
+        '200':
+          description: Grievance officer information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrievanceInfo'
+  /v1/games/{id}/chat:
+    get:
+      operationId: getGameChat
+      summary: Retrieve in-game chat message history
+      tags:
+        - moderation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Chat history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ChatMessageItem'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+    post:
+      operationId: sendGameChat
+      summary: Send in-game chat message
+      tags:
+        - moderation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendChatRequest'
+      responses:
+        '201':
+          description: Message posted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatMessageItem'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '429':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/cosmetics:
+    get:
+      operationId: getCosmeticsCatalog
+      summary: Retrieve active cosmetics catalog
+      tags:
+        - cosmetics
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [board, pieces, avatar, frame]
+      responses:
+        '200':
+          description: Cosmetics catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CosmeticItem'
+  /v1/cosmetics/{id}:
+    get:
+      operationId: getCosmeticItem
+      summary: Retrieve cosmetic item detail
+      tags:
+        - cosmetics
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cosmetic item detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CosmeticItem'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/cosmetics/{id}/purchase:
+    post:
+      operationId: purchaseCosmetic
+      summary: Purchase cosmetic item with gold
+      tags:
+        - cosmetics
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Purchase result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PurchaseResult'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
+        '422':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/me/loadout:
+    get:
+      operationId: getLoadout
+      summary: Retrieve user equipped cosmetic loadout
+      tags:
+        - cosmetics
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User loadout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserLoadout'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+    put:
+      operationId: updateLoadout
+      summary: Update equipped cosmetic loadout
+      tags:
+        - cosmetics
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateLoadoutRequest'
+      responses:
+        '200':
+          description: Updated loadout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserLoadout'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/ads/session:
+    post:
+      operationId: createAdSession
+      summary: Request a new rewarded ad session
+      tags:
+        - ads
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Ad session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdSessionResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/ads/status:
+    get:
+      operationId: getAdStatus
+      summary: Retrieve current rewarded ad status and eligibility
+      tags:
+        - ads
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Ad status and eligibility
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdStatusResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/ads/ssv/{provider}/callback:
+    get:
+      operationId: handleAdSsvCallback
+      summary: Provider Server-Side Verification (SSV) callback
+      tags:
+        - ads
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: key_id
+          in: query
+          schema:
+            type: string
+        - name: signature
+          in: query
+          schema:
+            type: string
+        - name: custom_data
+          in: query
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: timestamp
+          in: query
+          schema:
+            type: string
+        - name: transaction_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Callback processed and verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdSsvCallbackResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/admin/flags:
+    get:
+      summary: Anomaly detection flag queue
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: kind
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of anomaly flags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AnomalyFlagItem'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/admin/flags/{id}/resolve:
+    post:
+      summary: Resolve an anomaly flag
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveFlagRequest'
+      responses:
+        '200':
+          description: Resolved anomaly flag
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnomalyFlagItem'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/admin/players/{id}:
+    get:
+      summary: Detailed player inspection
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Player admin detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminPlayerDetail'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/admin/players/{id}/sanctions:
+    post:
+      summary: Apply sanction to a user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSanctionRequest'
+      responses:
+        '200':
+          description: Applied sanction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SanctionItem'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/admin/reports:
+    get:
+      summary: Moderation reports queue
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReportItem'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/admin/reports/{id}/action:
+    post:
+      summary: Action or dismiss a user report
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionReportRequest'
+      responses:
+        '200':
+          description: Updated report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportItem'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/admin/audit:
+    get:
+      summary: Admin audit log feed
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Audit log items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AdminAuditItem'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/notifications:
+    get:
+      summary: Notifications feed
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: unread_only
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Notifications feed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationsFeedResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/notifications/read:
+    post:
+      summary: Mark notifications as read
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MarkNotificationsReadRequest'
+      responses:
+        '200':
+          description: Mark read result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationsReadResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/admin/config/{key}:
+    get:
+      summary: Get dynamic app configuration knob
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Configuration item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppConfigItem'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+    put:
+      summary: Update dynamic app configuration knob with optimistic locking
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateConfigRequest'
+      responses:
+        '200':
+          description: Updated configuration item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppConfigItem'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/tournaments:
+    get:
+      operationId: getTournaments
+      summary: List tournaments
+      tags:
+        - tournaments
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [scheduled, registering, running, finished, cancelled]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of tournaments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tournament'
+  /v1/tournaments/{id}:
+    get:
+      operationId: getTournamentDetail
+      summary: Get tournament detail and current standings
+      tags:
+        - tournaments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tournament details, standings, and round pairings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TournamentDetail'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/tournaments/{id}/join:
+    post:
+      operationId: joinTournament
+      summary: Register for a tournament (free entry per ADR-011)
+      tags:
+        - tournaments
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully registered for tournament
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TournamentEntry'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/tournaments/{id}/withdraw:
+    post:
+      operationId: withdrawTournament
+      summary: Withdraw from a tournament prior to registration closing
+      tags:
+        - tournaments
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Successfully withdrawn from tournament
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
+  /v1/admin/tournaments:
+    post:
+      operationId: createTournament
+      summary: Create a tournament (admin role)
+      tags:
+        - admin
+        - tournaments
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTournamentRequest'
+      responses:
+        '201':
+          description: Tournament created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tournament'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/ErrorResponse'
 components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    ErrorResponse:
+      description: Error envelope
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
   schemas:
     Status:
       type: object
@@ -135,3 +1913,1674 @@ components:
                   - blitz
                   - rapid
                   - classical
+    OtpSendRequest:
+      type: object
+      required:
+        - phone
+      properties:
+        phone:
+          type: string
+          example: "+919876543210"
+    Consents:
+      type: object
+      required:
+        - essential
+        - functional
+        - marketing
+        - personalised_ads
+      properties:
+        essential:
+          type: boolean
+        functional:
+          type: boolean
+        marketing:
+          type: boolean
+        personalised_ads:
+          type: boolean
+    ProfileInput:
+      type: object
+      required:
+        - handle
+      properties:
+        handle:
+          type: string
+          example: "ananya_plays"
+        display_name:
+          type: string
+          example: "Ananya"
+    OtpVerifyRequest:
+      type: object
+      required:
+        - phone
+        - code
+        - age_confirmed
+        - consents
+        - profile
+      properties:
+        phone:
+          type: string
+          example: "+919876543210"
+        code:
+          type: string
+          example: "482913"
+        age_confirmed:
+          type: boolean
+        consents:
+          $ref: '#/components/schemas/Consents'
+        profile:
+          $ref: '#/components/schemas/ProfileInput'
+    RefreshRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+    RefreshResponse:
+      type: object
+      required:
+        - access_token
+        - expires_in
+        - refresh_token
+      properties:
+        access_token:
+          type: string
+        expires_in:
+          type: integer
+        refresh_token:
+          type: string
+    RatingsMap:
+      type: object
+      required:
+        - bullet
+        - blitz
+        - rapid
+        - classical
+      properties:
+        bullet:
+          type: integer
+        blitz:
+          type: integer
+        rapid:
+          type: integer
+        classical:
+          type: integer
+    UserSelf:
+      type: object
+      required:
+        - id
+        - handle
+        - display_name
+        - gold
+        - ratings
+        - provisional
+      properties:
+        id:
+          type: string
+        handle:
+          type: string
+        display_name:
+          type: string
+        gold:
+          type: integer
+        ratings:
+          $ref: '#/components/schemas/RatingsMap'
+        provisional:
+          type: boolean
+
+    AuthResponse:
+      type: object
+      required:
+        - access_token
+        - expires_in
+        - refresh_token
+        - user
+      properties:
+        access_token:
+          type: string
+        expires_in:
+          type: integer
+        refresh_token:
+          type: string
+        user:
+          $ref: '#/components/schemas/UserSelf'
+    ApiError:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+    UserSettings:
+      type: object
+      required:
+        - chat_enabled
+        - sound_enabled
+        - premove_enabled
+        - quiet_hours_start
+        - quiet_hours_end
+        - marketing_opt_in
+      properties:
+        chat_enabled:
+          type: boolean
+        sound_enabled:
+          type: boolean
+        premove_enabled:
+          type: boolean
+        quiet_hours_start:
+          type: integer
+        quiet_hours_end:
+          type: integer
+        marketing_opt_in:
+          type: boolean
+    UserMe:
+      type: object
+      required:
+        - id
+        - handle
+        - display_name
+        - country
+        - games_count
+        - wins
+        - losses
+        - draws
+        - ratings
+        - provisional
+        - gold
+        - settings
+        - created_at
+      properties:
+        id:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        handle:
+          type: string
+        display_name:
+          type: string
+        bio:
+          type: string
+          nullable: true
+        country:
+          type: string
+        avatar_cosmetic_id:
+          type: string
+          nullable: true
+        games_count:
+          type: integer
+        wins:
+          type: integer
+        losses:
+          type: integer
+        draws:
+          type: integer
+        ratings:
+          $ref: '#/components/schemas/RatingsMap'
+        provisional:
+          type: boolean
+
+    PatchSettingsInput:
+      type: object
+      properties:
+        chat_enabled:
+          type: boolean
+        sound_enabled:
+          type: boolean
+        premove_enabled:
+          type: boolean
+        quiet_hours_start:
+          type: integer
+        quiet_hours_end:
+          type: integer
+        marketing_opt_in:
+          type: boolean
+    PatchMeRequest:
+      type: object
+      properties:
+        display_name:
+          type: string
+        bio:
+          type: string
+        settings:
+          $ref: '#/components/schemas/PatchSettingsInput'
+    DeletionScheduledResponse:
+      type: object
+      required:
+        - status
+        - deletion_requested_at
+        - grace_period_days
+      properties:
+        status:
+          type: string
+        deletion_requested_at:
+          type: string
+        grace_period_days:
+          type: integer
+    LedgerItem:
+      type: object
+      required:
+        - id
+        - delta
+        - balance_after
+        - reason
+        - created_at
+      properties:
+        id:
+          type: integer
+        delta:
+          type: integer
+        balance_after:
+          type: integer
+        reason:
+          type: string
+        ref_type:
+          type: string
+          nullable: true
+        ref_id:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+
+    GoldLedgerPage:
+      type: object
+      required:
+        - balance
+        - items
+      properties:
+        balance:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LedgerItem'
+        next_cursor:
+          type: integer
+          nullable: true
+    DailyStreakResponse:
+      type: object
+      required:
+        - available
+        - streak
+        - next_reset_ist
+        - next_reward
+      properties:
+        available:
+          type: boolean
+        streak:
+          type: integer
+        next_reset_ist:
+          type: string
+        next_reward:
+          type: integer
+    DailyClaimResponse:
+      type: object
+      required:
+        - claimed
+        - amount
+        - streak
+        - new_balance
+      properties:
+        claimed:
+          type: boolean
+        amount:
+          type: integer
+        streak:
+          type: integer
+        new_balance:
+          type: integer
+    GoldBreakdownItem:
+      type: object
+      required:
+        - reason
+        - amount
+        - count
+      properties:
+        reason:
+          type: string
+        amount:
+          type: integer
+        delta:
+          type: integer
+        total:
+          type: integer
+        count:
+          type: integer
+    GoldSummaryResponse:
+      type: object
+      required:
+        - balance
+        - total_earned
+        - total_spent
+        - recent_30d_breakdown
+      properties:
+        balance:
+          type: integer
+        total_earned:
+          type: integer
+        total_spent:
+          type: integer
+        recent_30d_breakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/GoldBreakdownItem'
+    PlayerProfile:
+      type: object
+      required:
+        - id
+        - handle
+        - display_name
+        - country
+        - games_count
+        - wins
+        - losses
+        - draws
+        - ratings
+        - provisional
+      properties:
+        id:
+          type: string
+        handle:
+          type: string
+        display_name:
+          type: string
+        bio:
+          type: string
+          nullable: true
+        country:
+          type: string
+        avatar_cosmetic_id:
+          type: string
+          nullable: true
+        games_count:
+          type: integer
+        wins:
+          type: integer
+        losses:
+          type: integer
+        draws:
+          type: integer
+        ratings:
+          $ref: '#/components/schemas/RatingsMap'
+        provisional:
+          type: boolean
+    QueueJoinRequest:
+      type: object
+      required:
+        - tc
+      properties:
+        tc:
+          type: object
+          required:
+            - initial_s
+            - increment_s
+          properties:
+            initial_s:
+              type: integer
+            increment_s:
+              type: integer
+        rated:
+          type: boolean
+          default: true
+    QueueJoinResponse:
+      type: object
+      required:
+        - pool
+        - est_wait_s
+        - ratings
+      properties:
+        pool:
+          type: string
+        est_wait_s:
+          type: integer
+        ratings:
+          type: object
+          properties:
+            rating:
+              type: integer
+            rd:
+              type: integer
+          additionalProperties: true
+    MatchmakingStatusResponse:
+      type: object
+      required:
+        - queued
+      properties:
+        queued:
+          type: boolean
+        pool:
+          type: string
+        waited_s:
+          type: integer
+    RealtimeTicketResponse:
+      type: object
+      required:
+        - ticket
+        - ws_url
+        - expires_in
+      properties:
+        ticket:
+          type: string
+          description: Cryptographic single-use token valid for 30 seconds
+        ws_url:
+          type: string
+          description: Relative or absolute WebSocket path
+          example: /ws
+        expires_in:
+          type: integer
+          description: Seconds until ticket expires
+          example: 30
+    GameSnapshot:
+      type: object
+      required:
+        - id
+        - rated
+        - pool
+        - tc
+        - white
+        - black
+        - status
+        - fen
+        - ply
+        - version
+        - clocks
+        - moves
+      properties:
+        id:
+          type: string
+        rated:
+          type: boolean
+        pool:
+          type: string
+        tc:
+          type: object
+          properties:
+            initial_s:
+              type: integer
+            increment_s:
+              type: integer
+        white:
+          type: object
+          properties:
+            handle:
+              type: string
+            rating:
+              type: integer
+        black:
+          type: object
+          properties:
+            handle:
+              type: string
+            rating:
+              type: integer
+        status:
+          type: string
+        result:
+          type: string
+          nullable: true
+        termination:
+          type: string
+          nullable: true
+        fen:
+          type: string
+        ply:
+          type: integer
+        version:
+          type: integer
+        clocks:
+          type: object
+          properties:
+            white_ms:
+              type: integer
+            black_ms:
+              type: integer
+            server_ts:
+              type: string
+              nullable: true
+        moves:
+          type: array
+          items:
+            type: object
+            properties:
+              ply:
+                type: integer
+              uci:
+                type: string
+              san:
+                type: string
+        stream_id:
+          type: string
+          nullable: true
+        draw_offer:
+          type: string
+          nullable: true
+    GameMovesPage:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              ply:
+                type: integer
+              uci:
+                type: string
+              san:
+                type: string
+              fen_after:
+                type: string
+              w_remaining_ms:
+                type: integer
+              b_remaining_ms:
+                type: integer
+              ts:
+                type: string
+        next_cursor:
+          type: integer
+          nullable: true
+    GameResignResponse:
+      type: object
+      required:
+        - status
+        - result
+        - termination
+      properties:
+        status:
+          type: string
+        result:
+          type: string
+        termination:
+          type: string
+        ratings:
+          type: object
+          nullable: true
+        gold:
+          type: object
+          properties:
+            earned:
+              type: integer
+            reason:
+              type: string
+            balance:
+              type: integer
+    GameAbortResponse:
+      type: object
+      required:
+        - id
+        - status
+        - termination
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        termination:
+          type: string
+    DataExportResponse:
+      type: object
+      required:
+        - job_id
+        - status
+        - exported_at
+        - bundle
+      properties:
+        job_id:
+          type: string
+        status:
+          type: string
+        exported_at:
+          type: string
+        bundle:
+          type: object
+    PlayerGamesPage:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+        next_cursor:
+          type: integer
+          nullable: true
+    DrawOfferResponse:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+        draw_offer:
+          type: string
+          nullable: true
+    FriendPresence:
+      type: object
+      required:
+        - online
+        - status
+      properties:
+        online:
+          type: boolean
+        status:
+          type: string
+    FriendInfo:
+      type: object
+      required:
+        - id
+        - user_id
+        - handle
+        - display_name
+        - rating
+        - presence
+      properties:
+        id:
+          type: integer
+          format: int64
+        user_id:
+          type: string
+        handle:
+          type: string
+        display_name:
+          type: string
+        avatar_cosmetic_id:
+          type: string
+          nullable: true
+        rating:
+          type: integer
+        presence:
+          $ref: '#/components/schemas/FriendPresence'
+        accepted_at:
+          type: string
+          nullable: true
+    FriendRequestItem:
+      type: object
+      required:
+        - id
+        - handle
+        - display_name
+        - rating
+        - created_at
+      properties:
+        id:
+          type: integer
+          format: int64
+        handle:
+          type: string
+        display_name:
+          type: string
+        rating:
+          type: integer
+        avatar_cosmetic_id:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+
+    FriendRequestsResponse:
+      type: object
+      required:
+        - incoming
+        - outgoing
+      properties:
+        incoming:
+          type: array
+          items:
+            $ref: '#/components/schemas/FriendRequestItem'
+        outgoing:
+          type: array
+          items:
+            $ref: '#/components/schemas/FriendRequestItem'
+    BlockedUserItem:
+      type: object
+      required:
+        - handle
+        - display_name
+        - blocked_at
+      properties:
+        handle:
+          type: string
+        display_name:
+          type: string
+        blocked_at:
+          type: string
+    HandleRequest:
+      type: object
+      required:
+        - handle
+      properties:
+        handle:
+          type: string
+    ChallengeTcInput:
+      type: object
+      required:
+        - initial_s
+        - increment_s
+      properties:
+        initial_s:
+          type: integer
+        increment_s:
+          type: integer
+    CreateChallengeRequest:
+      type: object
+      required:
+        - handle
+        - tc
+      properties:
+        handle:
+          type: string
+        tc:
+          $ref: '#/components/schemas/ChallengeTcInput'
+        rated:
+          type: boolean
+          default: false
+    DirectChallenge:
+      type: object
+      required:
+        - id
+        - challenger_handle
+        - challenger_rating
+        - target_handle
+        - initial_s
+        - increment_s
+        - rated
+        - created_at
+        - expires_at
+      properties:
+        id:
+          type: string
+        challenger_handle:
+          type: string
+        challenger_rating:
+          type: integer
+        target_handle:
+          type: string
+        initial_s:
+          type: integer
+        increment_s:
+          type: integer
+        rated:
+          type: boolean
+        created_at:
+          type: string
+
+        expires_at:
+          type: string
+    CreateReportRequest:
+      type: object
+      required:
+        - category
+        - target_handle
+      properties:
+        category:
+          type: string
+          enum: [cheating, abuse, inappropriate_name, other]
+        target_handle:
+          type: string
+        game_id:
+          type: string
+          nullable: true
+        note:
+          type: string
+          nullable: true
+    ReportItem:
+      type: object
+      required:
+        - id
+        - reporter_id
+        - category
+        - target_handle
+        - status
+        - created_at
+      properties:
+        id:
+          type: integer
+          format: int64
+        reporter_id:
+          type: string
+        category:
+          type: string
+        target_handle:
+          type: string
+        game_id:
+          type: string
+          nullable: true
+        note:
+          type: string
+          nullable: true
+        status:
+          type: string
+        created_at:
+          type: string
+
+    GrievancePolicyLink:
+      type: object
+      required:
+        - name
+        - url
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+    GrievanceInfo:
+      type: object
+      required:
+        - officer_name
+        - officer_title
+        - officer_email
+        - address
+        - acknowledgment_sla_hours
+        - disposition_sla_days
+        - governing_rule
+        - policies
+      properties:
+        officer_name:
+          type: string
+        officer_title:
+          type: string
+        officer_email:
+          type: string
+        address:
+          type: string
+        acknowledgment_sla_hours:
+          type: integer
+        disposition_sla_days:
+          type: integer
+        governing_rule:
+          type: string
+        policies:
+          type: array
+          items:
+            $ref: '#/components/schemas/GrievancePolicyLink'
+    SendChatRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          maxLength: 200
+    ChatMessageItem:
+      type: object
+      required:
+        - id
+        - game_id
+        - user_id
+        - handle
+        - body
+        - masked
+        - created_at
+      properties:
+        id:
+          type: integer
+          format: int64
+        game_id:
+          type: string
+        user_id:
+          type: string
+        handle:
+          type: string
+        body:
+          type: string
+        masked:
+          type: boolean
+        created_at:
+          type: string
+    CosmeticItem:
+      type: object
+      required:
+        - id
+        - category
+        - name_key
+        - price_gold
+        - rarity
+        - preview
+        - active
+        - owned
+      properties:
+        id:
+          type: string
+        category:
+          type: string
+          enum: [board, pieces, avatar, frame]
+        name_key:
+          type: string
+        price_gold:
+          type: integer
+          format: int64
+        rarity:
+          type: string
+          enum: [common, rare, epic, legendary]
+        preview:
+          type: object
+        available_from:
+          type: string
+          format: date-time
+          nullable: true
+        available_to:
+          type: string
+          format: date-time
+          nullable: true
+        active:
+          type: boolean
+        owned:
+          type: boolean
+    PurchaseLedgerInfo:
+      type: object
+      required:
+        - reason
+        - delta
+      properties:
+        reason:
+          type: string
+        delta:
+          type: integer
+          format: int64
+    PurchaseResult:
+      type: object
+      required:
+        - owned
+        - balance
+        - ledger
+      properties:
+        owned:
+          type: boolean
+        balance:
+          type: integer
+          format: int64
+        ledger:
+          $ref: '#/components/schemas/PurchaseLedgerInfo'
+        replayed:
+          type: boolean
+    UserLoadout:
+      type: object
+      properties:
+        board_id:
+          type: string
+          nullable: true
+        pieces_id:
+          type: string
+          nullable: true
+        avatar_id:
+          type: string
+          nullable: true
+        frame_id:
+          type: string
+          nullable: true
+
+    UpdateLoadoutRequest:
+      type: object
+      properties:
+        board_id:
+          type: string
+          nullable: true
+        pieces_id:
+          type: string
+          nullable: true
+        avatar_id:
+          type: string
+          nullable: true
+        frame_id:
+          type: string
+          nullable: true
+    MissionItem:
+      type: object
+      required:
+        - id
+        - kind
+        - title_key
+        - goal_type
+        - progress
+        - goal
+        - claimed
+        - reward_gold
+        - period_key
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+          enum: [daily, weekly]
+        title_key:
+          type: string
+        goal_type:
+          type: string
+        progress:
+          type: integer
+        goal:
+          type: integer
+        claimed:
+          type: boolean
+        reward_gold:
+          type: integer
+          format: int64
+        period_key:
+          type: string
+    ClaimMissionResult:
+      type: object
+      required:
+        - claimed
+        - amount
+        - new_balance
+      properties:
+        claimed:
+          type: boolean
+        amount:
+          type: integer
+          format: int64
+        new_balance:
+          type: integer
+          format: int64
+    AchievementItem:
+      type: object
+      required:
+        - id
+        - title_key
+        - goal_type
+        - progress
+        - target
+        - reward_gold
+        - unlocked
+      properties:
+        id:
+          type: string
+        title_key:
+          type: string
+        goal_type:
+          type: string
+        progress:
+          type: integer
+          format: int64
+        target:
+          type: integer
+          format: int64
+        reward_gold:
+          type: integer
+          format: int64
+        unlocked:
+          type: boolean
+        granted_at:
+          type: string
+          format: date-time
+          nullable: true
+    AnomalyFlagItem:
+      type: object
+      required:
+        - id
+        - kind
+        - subject_user_id
+        - evidence
+        - score
+        - status
+        - created_at
+      properties:
+        id:
+          type: integer
+          format: int64
+        kind:
+          type: string
+        subject_user_id:
+          type: integer
+          format: int64
+        subject_handle:
+          type: string
+          nullable: true
+        related_user_id:
+          type: integer
+          format: int64
+          nullable: true
+        related_handle:
+          type: string
+          nullable: true
+        evidence:
+          type: object
+        score:
+          type: number
+          format: float
+        status:
+          type: string
+        reviewed_by:
+          type: string
+          nullable: true
+        reviewed_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    ResolveFlagRequest:
+      type: object
+      required:
+        - resolution
+      properties:
+        resolution:
+          type: string
+        notes:
+          type: string
+          nullable: true
+    SanctionItem:
+      type: object
+      required:
+        - id
+        - user_id
+        - kind
+        - reason
+        - issued_by
+        - created_at
+      properties:
+        id:
+          type: integer
+          format: int64
+        user_id:
+          type: integer
+          format: int64
+        handle:
+          type: string
+          nullable: true
+        kind:
+          type: string
+        reason:
+          type: string
+        issued_by:
+          type: string
+        evidence:
+          type: object
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        lifted_at:
+          type: string
+          format: date-time
+          nullable: true
+    CreateSanctionRequest:
+      type: object
+      required:
+        - kind
+        - reason
+      properties:
+        kind:
+          type: string
+        reason:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        evidence:
+          type: object
+          nullable: true
+    ActionReportRequest:
+      type: object
+      required:
+        - action
+      properties:
+        action:
+          type: string
+        resolution:
+          type: object
+          nullable: true
+    AdminPlayerDetail:
+      type: object
+      required:
+        - id
+        - public_id
+        - handle
+        - display_name
+        - role
+        - status
+        - created_at
+        - gold_balance
+        - ratings
+        - active_sanctions
+        - anomaly_flags
+        - reports_received
+      properties:
+        id:
+          type: integer
+          format: int64
+        public_id:
+          type: string
+        handle:
+          type: string
+        display_name:
+          type: string
+        role:
+          type: string
+        status:
+          type: string
+        phone_e164:
+          type: string
+          nullable: true
+        email:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        gold_balance:
+          type: integer
+          format: int64
+        ratings:
+          type: object
+        active_sanctions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SanctionItem'
+        anomaly_flags:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnomalyFlagItem'
+        reports_received:
+          type: integer
+          format: int64
+    AdminAuditItem:
+      type: object
+      required:
+        - id
+        - actor
+        - action
+        - payload
+        - created_at
+      properties:
+        id:
+          type: integer
+          format: int64
+        actor:
+          type: string
+        action:
+          type: string
+        target_type:
+          type: string
+          nullable: true
+        target_id:
+          type: string
+          nullable: true
+        payload:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+    NotificationItem:
+      type: object
+      required:
+        - id
+        - kind
+        - payload
+        - created_at
+      properties:
+        id:
+          type: integer
+          format: int64
+        kind:
+          type: string
+        payload:
+          type: object
+        read_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+    NotificationsFeedResponse:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationItem'
+        next_cursor:
+          type: integer
+          format: int64
+          nullable: true
+    MarkNotificationsReadRequest:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: integer
+            format: int64
+        all:
+          type: boolean
+    NotificationsReadResponse:
+      type: object
+      required:
+        - status
+        - updated
+      properties:
+        status:
+          type: string
+        updated:
+          type: integer
+          format: int64
+    AppConfigItem:
+      type: object
+      required:
+        - key
+        - value
+        - updated_by
+        - updated_at
+        - version
+      properties:
+        key:
+          type: string
+        value:
+          type: object
+        updated_by:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+        version:
+          type: integer
+    UpdateConfigRequest:
+      type: object
+      required:
+        - value
+        - version
+      properties:
+        value:
+          type: object
+        version:
+          type: integer
+    AdSessionResponse:
+      type: object
+      required:
+        - session_id
+        - provider
+        - reward_gold
+        - remaining_today
+        - cooldown_s
+      properties:
+        session_id:
+          type: string
+        provider:
+          type: string
+        reward_gold:
+          type: integer
+          format: int64
+        remaining_today:
+          type: integer
+        cooldown_s:
+          type: integer
+    AdEligibility:
+      type: object
+      required:
+        - eligible
+        - account_age_ok
+        - games_completed_ok
+        - no_active_game
+        - not_sanctioned
+        - age_ok
+      properties:
+        eligible:
+          type: boolean
+        reason:
+          type: string
+          nullable: true
+        account_age_ok:
+          type: boolean
+        games_completed_ok:
+          type: boolean
+        no_active_game:
+          type: boolean
+        not_sanctioned:
+          type: boolean
+        age_ok:
+          type: boolean
+    AdStatusResponse:
+      type: object
+      required:
+        - enabled
+        - gold_per_ad
+        - max_per_day
+        - used_today
+        - eligibility
+      properties:
+        enabled:
+          type: boolean
+        gold_per_ad:
+          type: integer
+          format: int64
+        max_per_day:
+          type: integer
+        used_today:
+          type: integer
+        cooldown_until:
+          type: string
+          format: date-time
+          nullable: true
+        eligibility:
+          $ref: '#/components/schemas/AdEligibility'
+    AdSsvCallbackResponse:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: "ok"
+        transaction_id:
+          type: string
+    Tournament:
+      type: object
+      required:
+        - id
+        - public_id
+        - name
+        - tc
+        - rounds
+        - round_minutes
+        - status
+        - starts_at
+        - registration_closes_at
+        - capacity
+        - prize_config
+        - created_by
+      properties:
+        id:
+          type: integer
+          format: int64
+        public_id:
+          type: string
+        name:
+          type: string
+        tc:
+          type: object
+        rounds:
+          type: integer
+        round_minutes:
+          type: integer
+        status:
+          type: string
+          enum: [scheduled, registering, running, finished, cancelled]
+        starts_at:
+          type: string
+          format: date-time
+        registration_closes_at:
+          type: string
+          format: date-time
+        capacity:
+          type: integer
+        prize_config:
+          type: object
+        created_by:
+          type: integer
+          format: int64
+    TournamentEntry:
+      type: object
+      required:
+        - tournament_id
+        - user_id
+        - joined_at
+        - withdrawn
+      properties:
+        tournament_id:
+          type: integer
+          format: int64
+        user_id:
+          type: integer
+          format: int64
+        joined_at:
+          type: string
+          format: date-time
+        withdrawn:
+          type: boolean
+        final_rank:
+          type: integer
+          nullable: true
+        prize_gold:
+          type: integer
+          format: int64
+          nullable: true
+    TournamentPairing:
+      type: object
+      required:
+        - id
+        - tournament_id
+        - round
+        - board
+      properties:
+        id:
+          type: integer
+          format: int64
+        tournament_id:
+          type: integer
+          format: int64
+        round:
+          type: integer
+        board:
+          type: integer
+        white_id:
+          type: integer
+          format: int64
+          nullable: true
+        black_id:
+          type: integer
+          format: int64
+          nullable: true
+        game_id:
+          type: integer
+          format: int64
+          nullable: true
+        result:
+          type: string
+          nullable: true
+    StandingItem:
+      type: object
+      required:
+        - rank
+        - user_id
+        - handle
+        - points
+        - buchholz
+        - sonneborn_berger
+        - games_played
+        - wins
+        - draws
+        - losses
+      properties:
+        rank:
+          type: integer
+        user_id:
+          type: integer
+          format: int64
+        handle:
+          type: string
+        points:
+          type: number
+        buchholz:
+          type: number
+        sonneborn_berger:
+          type: number
+        games_played:
+          type: integer
+        wins:
+          type: integer
+        draws:
+          type: integer
+        losses:
+          type: integer
+    TournamentDetail:
+      type: object
+      required:
+        - tournament
+        - entries_count
+        - standings
+        - pairings
+      properties:
+        tournament:
+          $ref: '#/components/schemas/Tournament'
+        entries_count:
+          type: integer
+          format: int64
+        my_entry:
+          $ref: '#/components/schemas/TournamentEntry'
+          nullable: true
+        standings:
+          type: array
+          items:
+            $ref: '#/components/schemas/StandingItem'
+        pairings:
+          type: array
+          items:
+            $ref: '#/components/schemas/TournamentPairing'
+    CreateTournamentRequest:
+      type: object
+      required:
+        - name
+        - tc
+        - rounds
+        - round_minutes
+        - starts_at
+        - registration_closes_at
+        - capacity
+      properties:
+        name:
+          type: string
+        tc:
+          type: object
+        rounds:
+          type: integer
+        round_minutes:
+          type: integer
+        starts_at:
+          type: string
+          format: date-time
+        registration_closes_at:
+          type: string
+          format: date-time
+        capacity:
+          type: integer
+        prize_config:
+          type: object
+
+
+

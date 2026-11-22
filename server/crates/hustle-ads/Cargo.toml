@@ -1,0 +1,28 @@
+[package]
+name = "hustle-ads"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+async-trait = { workspace = true }
+base64 = "0.22"
+ecdsa = { version = "0.16", features = ["verifying"] }
+hustle-domain = { path = "../hustle-domain" }
+hustle-gold = { path = "../hustle-gold" }
+hustle-kernel = { path = "../hustle-kernel" }
+p256 = { version = "0.13", features = ["ecdsa", "sha256"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = "0.10"
+sqlx = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+ulid = { workspace = true }
+
+[dev-dependencies]
+ecdsa = { version = "0.16", features = ["verifying", "signing"] }
+hustle-identity = { path = "../hustle-identity" }
+hustle-testkit = { path = "../hustle-testkit" }
+

@@ -92,7 +92,8 @@ pub async fn make_user(pool: &PgPool, tag: &str) -> i64 {
     let display = format!("Test {tag} {counter}");
     sqlx::query_scalar(
         "WITH u AS (
-           INSERT INTO users (phone_e164, age_confirmed_at) VALUES ($1, now()) RETURNING id
+           INSERT INTO users (phone_e164, age_confirmed_at, public_id)
+           VALUES ($1, now(), $4) RETURNING id
          ), p AS (
            INSERT INTO profiles (user_id, handle, display_name)
            SELECT id, $2, $3 FROM u RETURNING user_id
@@ -102,6 +103,7 @@ pub async fn make_user(pool: &PgPool, tag: &str) -> i64 {
     .bind(phone)
     .bind(&handle)
     .bind(display)
+    .bind(ulid::Ulid::new().to_string())
     .fetch_one(pool)
     .await
     .expect("make_user")

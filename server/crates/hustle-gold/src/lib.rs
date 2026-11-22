@@ -9,6 +9,13 @@
 //! - `idem_key` unique → replay-safe grants (`ON CONFLICT DO NOTHING`);
 //! - overdraft structurally impossible (domain check + DB CHECK backstop).
 
+pub mod daily_streak;
+
+pub use daily_streak::{
+    claim_daily_streak, format_next_reset_ist, get_daily_status, get_gold_summary, ist_offset,
+    to_ist, DailyClaimResult, DailyStreakStatus, GoldBreakdownItem, GoldSummary,
+};
+
 use async_trait::async_trait;
 use hustle_domain::economy::{self, GoldError};
 use serde_json::Value;
@@ -133,7 +140,7 @@ impl PgGoldLedger {
     }
 
     /// Ensure a balance row exists (zero) so `FOR UPDATE` always has a row.
-    async fn ensure_row(conn: &mut PgConnection, user_id: i64) -> Result<(), sqlx::Error> {
+    pub async fn ensure_row(conn: &mut PgConnection, user_id: i64) -> Result<(), sqlx::Error> {
         sqlx::query("INSERT INTO gold_balances (user_id, balance) VALUES ($1, 0) ON CONFLICT (user_id) DO NOTHING")
             .bind(user_id)
             .execute(conn)
@@ -255,6 +262,29 @@ impl PgGoldLedger {
             }
         };
         Ok(rows)
+    }
+
+    /// Current daily streak status (available, streak, next_reset_ist, next_reward).
+    pub async fn daily_status(
+        &self,
+        user_id: i64,
+        now_utc: time::OffsetDateTime,
+    ) -> Result<DailyStreakStatus, LedgerError> {
+        daily_streak::get_daily_status(&self.pool, user_id, now_utc).await
+    }
+
+    /// Claim daily streak reward for today (IST). Idempotent for repeated claims.
+    pub async fn claim_daily(
+        &self,
+        user_id: i64,
+        now_utc: time::OffsetDateTime,
+    ) -> Result<DailyClaimResult, LedgerError> {
+        daily_streak::claim_daily_streak(&self.pool, user_id, now_utc).await
+    }
+
+    /// Gold summary and 30-day breakdown for transparency view.
+    pub async fn summary(&self, user_id: i64) -> Result<GoldSummary, LedgerError> {
+        daily_streak::get_gold_summary(&self.pool, user_id).await
     }
 }
 

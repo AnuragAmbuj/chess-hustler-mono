@@ -8,5 +8,6 @@ anyhow = { workspace = true }
 axum = { workspace = true }
 hustle-api = { path = "../hustle-api" }
 hustle-kernel = { path = "../hustle-kernel" }
+sqlx = { workspace = true }
 tokio = { workspace = true }
 tracing = { workspace = true }

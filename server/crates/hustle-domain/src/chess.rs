@@ -23,6 +23,17 @@ impl Pool {
             Pool::Classical => "classical",
         }
     }
+
+    /// Canonical parse (DB strings, API payloads).
+    pub fn parse(s: &str) -> Option<Self> {
+        match s {
+            "bullet" => Some(Pool::Bullet),
+            "blitz" => Some(Pool::Blitz),
+            "rapid" => Some(Pool::Rapid),
+            "classical" => Some(Pool::Classical),
+            _ => None,
+        }
+    }
 }
 
 impl std::fmt::Display for Pool {
