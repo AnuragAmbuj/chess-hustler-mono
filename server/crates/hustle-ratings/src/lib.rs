@@ -289,3 +289,73 @@ pub async fn ensure_default(pool: &PgPool, user_id: i64) -> Result<(), sqlx::Err
     tx.commit().await?;
     Ok(())
 }
+
+/// A single entry in the leaderboard snapshot.
+#[derive(Debug, Clone)]
+pub struct LeaderboardRow {
+    pub user_id: i64,
+    pub public_id: sqlx::types::Uuid,
+    pub handle: String,
+    pub display_name: Option<String>,
+    pub rating: f32,
+    pub rd: f32,
+    pub peak: f32,
+    pub games_count: i32,
+    pub wins: i32,
+    pub losses: i32,
+    pub draws: i32,
+}
+
+type RawLeaderboardRow = (
+    i64,
+    sqlx::types::Uuid,
+    String,
+    Option<String>,
+    f32,
+    f32,
+    f32,
+    i32,
+    i32,
+    i32,
+    i32,
+);
+
+/// Fetch top-ranked active players in a pool, ordered by rating descending.
+pub async fn get_leaderboard(
+    pool: &PgPool,
+    pool_name: Pool,
+    limit: i64,
+) -> Result<Vec<LeaderboardRow>, sqlx::Error> {
+    let rows: Vec<RawLeaderboardRow> = sqlx::query_as(
+        "SELECT r.user_id, u.public_id, p.handle, p.display_name, r.rating, r.rd, r.peak, r.games_count, p.wins, p.losses, p.draws
+         FROM ratings r
+         JOIN users u ON u.id = r.user_id
+         JOIN profiles p ON p.user_id = r.user_id
+         WHERE r.pool = $1 AND u.status = 'active'
+         ORDER BY r.rating DESC
+         LIMIT $2",
+    )
+    .bind(pool_name.as_str())
+    .bind(limit)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|(user_id, public_id, handle, display_name, rating, rd, peak, games_count, wins, losses, draws)| {
+            LeaderboardRow {
+                user_id,
+                public_id,
+                handle,
+                display_name,
+                rating,
+                rd,
+                peak,
+                games_count,
+                wins,
+                losses,
+                draws,
+            }
+        })
+        .collect())
+}

@@ -19,6 +19,7 @@ import {
   GameResultPayload,
   GameSnapshot,
   GrievanceInfo,
+  LeaderboardResponse,
   MissionItem,
   PurchaseResult,
   ReportItem,
@@ -622,6 +623,21 @@ class ApiClient {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: { message: 'Failed to initiate ad session' } }));
+      throw new Error(err?.error?.message || `HTTP ${res.status}`);
+    }
+    return res.json();
+  }
+
+  // ==========================================
+  // Leaderboards (RA-3 / PRD G3)
+  // ==========================================
+
+  async getLeaderboard(pool: string = 'blitz', limit: number = 50): Promise<LeaderboardResponse> {
+    const res = await fetch(`${API_BASE}/leaderboards?pool=${encodeURIComponent(pool)}&limit=${limit}`, {
+      headers: this.headers(),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: { message: 'Failed to get leaderboard' } }));
       throw new Error(err?.error?.message || `HTTP ${res.status}`);
     }
     return res.json();

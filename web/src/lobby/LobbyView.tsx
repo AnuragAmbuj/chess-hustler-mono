@@ -10,6 +10,11 @@ import { MissionsModal } from './MissionsModal';
 import { AdminModal } from './AdminModal';
 import { TournamentsModal } from './TournamentsModal';
 import { RewardedAdsModal } from './RewardedAdsModal';
+import { LeaderboardsModal } from './LeaderboardsModal';
+import { BotMatchModal } from './BotMatchModal';
+import { DailyPuzzleModal } from './DailyPuzzleModal';
+import { SpectateModal } from './SpectateModal';
+import { useTranslation } from '../i18n/useTranslation';
 import { TimeControlConfig, GameSnapshot, MatchmakingMatchedEvent, FriendInfo, UserLoadout } from '../types';
 import { useAuth } from '../auth/useAuth';
 import { useRealtime } from '../realtime/useRealtime';
@@ -22,6 +27,7 @@ interface LobbyViewProps {
 export function LobbyView({ onStartGame }: LobbyViewProps) {
   const { user, isAuthenticated, openAuthModal } = useAuth();
   const { subscribe } = useRealtime();
+  const { t } = useTranslation();
 
   // Loadout state
   const [loadout, setLoadout] = useState<UserLoadout>({});
@@ -37,6 +43,12 @@ export function LobbyView({ onStartGame }: LobbyViewProps) {
   // Tournaments & Ads state
   const [isTournamentsOpen, setIsTournamentsOpen] = useState(false);
   const [isAdsOpen, setIsAdsOpen] = useState(false);
+
+  // Leaderboard, Bot, Puzzle, Spectate states
+  const [isLeaderboardsOpen, setIsLeaderboardsOpen] = useState(false);
+  const [isBotModalOpen, setIsBotModalOpen] = useState(false);
+  const [isPuzzleOpen, setIsPuzzleOpen] = useState(false);
+  const [isSpectateOpen, setIsSpectateOpen] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -219,34 +231,7 @@ export function LobbyView({ onStartGame }: LobbyViewProps) {
   };
 
   const handlePracticeGame = () => {
-    const practiceSnapshot: GameSnapshot = {
-      id: `practice_${Date.now().toString(36)}`,
-      rated: false,
-      pool: selectedTc.pool,
-      tc: {
-        initial_s: selectedTc.initial_s,
-        increment_s: selectedTc.increment_s,
-      },
-      white: {
-        handle: user?.handle || 'Player',
-        rating: user?.ratings[selectedTc.pool] || 1200,
-      },
-      black: {
-        handle: 'Hustle Engine',
-        rating: 1500,
-      },
-      status: 'active',
-      fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-      ply: 0,
-      version: 0,
-      clocks: {
-        white_ms: selectedTc.initial_s * 1000,
-        black_ms: selectedTc.initial_s * 1000,
-        server_ts: new Date().toISOString(),
-      },
-      moves: [],
-    };
-    onStartGame(practiceSnapshot, 'white', loadout);
+    setIsBotModalOpen(true);
   };
 
   // Safe fallback stats for guests
@@ -264,6 +249,9 @@ export function LobbyView({ onStartGame }: LobbyViewProps) {
         onOpenAdmin={() => setIsAdminOpen(true)}
         onOpenTournaments={() => setIsTournamentsOpen(true)}
         onOpenAds={() => setIsAdsOpen(true)}
+        onOpenLeaderboards={() => setIsLeaderboardsOpen(true)}
+        onOpenPuzzle={() => setIsPuzzleOpen(true)}
+        onOpenSpectate={() => setIsSpectateOpen(true)}
         pendingRequestsCount={pendingRequestsCount}
         claimableMissionsCount={claimableMissionsCount}
       />
@@ -278,10 +266,8 @@ export function LobbyView({ onStartGame }: LobbyViewProps) {
         {/* Hero Section */}
         <div className="lobby-hero-card">
           <div className="hero-content">
-            <h1 className="hero-title">Step up to the board</h1>
-            <p className="hero-subtitle">
-              Live chess matchmaking with Glicko-2 ratings, daily gold bounties, and zero-latency WebSocket clocks.
-            </p>
+            <h1 className="hero-title">{t.heroTitle}</h1>
+            <p className="hero-subtitle">{t.heroSubtitle}</p>
           </div>
 
           <div className="hero-cta-group">
@@ -294,7 +280,7 @@ export function LobbyView({ onStartGame }: LobbyViewProps) {
                 disabled={isQueued}
               />
               <span className="switch-text">
-                Rated match <span className="switch-sub">(Affects Glicko-2)</span>
+                {t.ratedMatch} <span className="switch-sub">{t.ratedMatchSub}</span>
               </span>
             </label>
 
@@ -305,7 +291,7 @@ export function LobbyView({ onStartGame }: LobbyViewProps) {
                 onClick={handleFindMatch}
                 disabled={isQueued}
               >
-                <span>Find Match ({selectedTc.label} {selectedTc.pool.toUpperCase()})</span>
+                <span>{t.findMatch} ({selectedTc.label} {selectedTc.pool.toUpperCase()})</span>
               </button>
 
               <button
@@ -321,7 +307,7 @@ export function LobbyView({ onStartGame }: LobbyViewProps) {
                 disabled={isQueued}
                 title="View friends, direct challenges, and presence"
               >
-                <span>👥 Friends & Challenges</span>
+                <span>{t.friendsAndChallenges}</span>
               </button>
 
               <button
@@ -337,7 +323,7 @@ export function LobbyView({ onStartGame }: LobbyViewProps) {
                 disabled={isQueued}
                 title="Browse and compete in scheduled Swiss tournaments"
               >
-                <span>🏆 Tournaments</span>
+                <span>{t.tournaments}</span>
               </button>
 
               <button
@@ -345,9 +331,9 @@ export function LobbyView({ onStartGame }: LobbyViewProps) {
                 className="btn btn-ghost btn-lg"
                 onClick={handlePracticeGame}
                 disabled={isQueued}
-                title="Immediate practice game against local engine"
+                title="Practice against calibrated bot engines"
               >
-                <span>Practice vs Bot</span>
+                <span>{t.practiceVsBot}</span>
               </button>
             </div>
           </div>
@@ -363,26 +349,26 @@ export function LobbyView({ onStartGame }: LobbyViewProps) {
         {/* Dashboard Quick Stats */}
         <div className="dashboard-stats-grid">
           <div className="stat-card">
-            <span className="stat-card-label">Bullet Rating</span>
+            <span className="stat-card-label">{t.bulletRating}</span>
             <span className="stat-card-value tabular-nums">{bulletRating}</span>
-            <span className="stat-card-sub">Fast & instinctive (&lt; 3m)</span>
+            <span className="stat-card-sub">{t.bulletDesc}</span>
           </div>
           <div className="stat-card">
-            <span className="stat-card-label">Blitz Rating</span>
+            <span className="stat-card-label">{t.blitzRating}</span>
             <span className="stat-card-value tabular-nums">{blitzRating}</span>
-            <span className="stat-card-sub">Primary competitive pool</span>
+            <span className="stat-card-sub">{t.blitzDesc}</span>
           </div>
           <div className="stat-card">
-            <span className="stat-card-label">Rapid Rating</span>
+            <span className="stat-card-label">{t.rapidRating}</span>
             <span className="stat-card-value tabular-nums">{rapidRating}</span>
-            <span className="stat-card-sub">Deep calculation (10m+)</span>
+            <span className="stat-card-sub">{t.rapidDesc}</span>
           </div>
           <div className="stat-card">
-            <span className="stat-card-label">Total Gold</span>
+            <span className="stat-card-label">{t.totalGold}</span>
             <span className="stat-card-value stat-gold tabular-nums">
               {totalGold.toLocaleString()} 🪙
             </span>
-            <span className="stat-card-sub">+25 Gold per win</span>
+            <span className="stat-card-sub">{t.goldPerWin}</span>
           </div>
         </div>
       </main>
@@ -437,6 +423,39 @@ export function LobbyView({ onStartGame }: LobbyViewProps) {
       <RewardedAdsModal
         isOpen={isAdsOpen}
         onClose={() => setIsAdsOpen(false)}
+      />
+
+      <LeaderboardsModal
+        isOpen={isLeaderboardsOpen}
+        onClose={() => setIsLeaderboardsOpen(false)}
+        onChallengePlayer={() => {
+          setIsLeaderboardsOpen(false);
+          setIsFriendsOpen(true);
+        }}
+      />
+
+      <BotMatchModal
+        isOpen={isBotModalOpen}
+        onClose={() => setIsBotModalOpen(false)}
+        onStartBotGame={(snapshot, color) => onStartGame(snapshot, color, loadout)}
+        userHandle={user?.handle}
+        userRating={user?.ratings[selectedTc.pool]}
+      />
+
+      <DailyPuzzleModal
+        isOpen={isPuzzleOpen}
+        onClose={() => setIsPuzzleOpen(false)}
+        onRewardClaimed={(amt) => {
+          if (user) {
+            user.gold += amt;
+          }
+        }}
+      />
+
+      <SpectateModal
+        isOpen={isSpectateOpen}
+        onClose={() => setIsSpectateOpen(false)}
+        onSpectateGame={(snapshot) => onStartGame(snapshot, 'white', loadout)}
       />
     </div>
   );

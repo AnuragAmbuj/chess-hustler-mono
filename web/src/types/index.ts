@@ -425,5 +425,62 @@ export interface AdSessionResponse {
   cooldown_s: number;
 }
 
+// ==========================================
+// Leaderboards (RA-3 / PRD G3)
+// ==========================================
+
+export interface LeaderboardEntry {
+  rank: number;
+  user_id: string;
+  handle: string;
+  display_name: string;
+  rating: number;
+  rd: number;
+  peak_rating: number;
+  games_count: number;
+  win_count: number;
+  loss_count: number;
+  draw_count: number;
+}
+
+export interface LeaderboardResponse {
+  pool: 'bullet' | 'blitz' | 'rapid' | 'classical';
+  updated_at: string;
+  entries: LeaderboardEntry[];
+}
+
+// ==========================================
+// Daily Tactical Puzzles (Phase 5)
+// ==========================================
+
+export interface TacticalPuzzle {
+  id: string;
+  title: string;
+  theme: string;
+  difficulty: 'Novice' | 'Intermediate' | 'Master';
+  fen: string;
+  playerColor: 'white' | 'black';
+  moves: string[]; // SAN moves e.g. ["Qxf7#"] or ["Nf7+", "Kg8", "Nh6#"]
+  hint: string;
+  rewardGold: number;
+  solved?: boolean;
+}
+
+// ==========================================
+// Live Spectate (Phase 5)
+// ==========================================
+
+export interface LiveGameSummary {
+  id: string;
+  white: { handle: string; rating: number };
+  black: { handle: string; rating: number };
+  pool: 'bullet' | 'blitz' | 'rapid' | 'classical';
+  tc: { initial_s: number; increment_s: number };
+  ply: number;
+  started_at: string;
+  spectators: number;
+}
+
+
 
 

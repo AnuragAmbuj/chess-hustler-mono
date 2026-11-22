@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../auth/useAuth';
 import { usePieceTheme, PieceTheme } from '../game/pieces';
 import { DailyStreakModal } from './DailyStreakModal';
+import { useTranslation } from '../i18n/useTranslation';
 
 interface ProfileHeaderProps {
   onOpenFriends?: () => void;
@@ -10,6 +11,9 @@ interface ProfileHeaderProps {
   onOpenAdmin?: () => void;
   onOpenTournaments?: () => void;
   onOpenAds?: () => void;
+  onOpenLeaderboards?: () => void;
+  onOpenPuzzle?: () => void;
+  onOpenSpectate?: () => void;
   pendingRequestsCount?: number;
   claimableMissionsCount?: number;
 }
@@ -21,11 +25,15 @@ export function ProfileHeader({
   onOpenAdmin,
   onOpenTournaments,
   onOpenAds,
+  onOpenLeaderboards,
+  onOpenPuzzle,
+  onOpenSpectate,
   pendingRequestsCount,
   claimableMissionsCount,
 }: ProfileHeaderProps) {
   const { user, isAuthenticated, openAuthModal, logout } = useAuth();
   const { pieceTheme, setPieceTheme } = usePieceTheme();
+  const { lang, setLang, t } = useTranslation();
   const [isStreakModalOpen, setIsStreakModalOpen] = useState(false);
   const [isDark, setIsDark] = useState<boolean>(() => {
     return document.documentElement.getAttribute('data-theme') !== 'light';
@@ -45,6 +53,10 @@ export function ProfileHeader({
     localStorage.setItem('ch_theme', nextTheme);
   };
 
+  const toggleLanguage = () => {
+    setLang(lang === 'en' ? 'hi' : 'en');
+  };
+
   const handlePieceThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setPieceTheme(e.target.value as PieceTheme);
   };
@@ -55,15 +67,32 @@ export function ProfileHeader({
         <div className="header-brand">
           <div className="brand-symbol">♞</div>
           <div className="brand-text">
-            <span className="brand-name">Chess Hustle</span>
-            <span className="brand-tagline">Blitz & Rapid Arena</span>
+            <span className="brand-name">{t.brandName}</span>
+            <span className="brand-tagline">{t.brandTagline}</span>
           </div>
         </div>
 
         <div className="header-actions">
+          {/* Language Toggle (English / Hindi) */}
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            onClick={toggleLanguage}
+            title={lang === 'en' ? 'Switch to Hindi (हिन्दी)' : 'Switch to English'}
+            style={{
+              fontWeight: 600,
+              fontSize: '0.8rem',
+              padding: '0.3rem 0.6rem',
+              borderRadius: '9999px',
+              border: '1px solid var(--border-color)',
+            }}
+          >
+            🌐 {lang === 'en' ? 'हिन्दी' : 'English'}
+          </button>
+
           {/* Piece Set Selector */}
           <div className="piece-theme-picker">
-            <span className="picker-label">Pieces:</span>
+            <span className="picker-label">{t.pieces}:</span>
             <select
               className="piece-theme-select"
               value={pieceTheme}
@@ -85,8 +114,68 @@ export function ProfileHeader({
             title={isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
             aria-label="Toggle color theme"
           >
-            {isDark ? '☀️ Light' : '🌙 Dark'}
+            {isDark ? `☀️ ${t.lightTheme}` : `🌙 ${t.darkTheme}`}
           </button>
+
+          {/* Rankings / Leaderboard Button */}
+          {onOpenLeaderboards && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={onOpenLeaderboards}
+              title="Top Ranked Players Leaderboard"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                borderRadius: '9999px',
+                border: '1px solid var(--border-color)',
+              }}
+            >
+              <span>🏆</span>
+              <span>{t.leaderboard}</span>
+            </button>
+          )}
+
+          {/* Daily Tactical Puzzle Button */}
+          {onOpenPuzzle && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={onOpenPuzzle}
+              title="Daily Tactical Puzzle"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                borderRadius: '9999px',
+                border: '1px solid var(--border-color)',
+              }}
+            >
+              <span>🧩</span>
+              <span>{t.puzzle}</span>
+            </button>
+          )}
+
+          {/* Live Spectate Button */}
+          {onOpenSpectate && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={onOpenSpectate}
+              title="Watch Live Grandmaster Games"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                borderRadius: '9999px',
+                border: '1px solid var(--border-color)',
+              }}
+            >
+              <span>👁️</span>
+              <span>{t.spectate}</span>
+            </button>
+          )}
 
           {isAuthenticated && user ? (
             <>
@@ -98,7 +187,7 @@ export function ProfileHeader({
                 title="Daily Streak Rewards"
               >
                 <span className="streak-icon">⚡</span>
-                <span className="streak-text">Streak</span>
+                <span className="streak-text">{t.streak}</span>
                 <span className="streak-badge">Claim</span>
               </button>
 
@@ -111,7 +200,7 @@ export function ProfileHeader({
                   title="Daily & Weekly Missions"
                 >
                   <span className="missions-icon">🎯</span>
-                  <span className="missions-text">Missions</span>
+                  <span className="missions-text">{t.missions}</span>
                   {claimableMissionsCount && claimableMissionsCount > 0 ? (
                     <span className="missions-badge">{claimableMissionsCount}</span>
                   ) : null}
@@ -127,7 +216,7 @@ export function ProfileHeader({
                   title="Vault & Cosmetics"
                 >
                   <span className="vault-icon">🎨</span>
-                  <span className="vault-text">Vault</span>
+                  <span className="vault-text">{t.vault}</span>
                 </button>
               )}
 
@@ -140,7 +229,7 @@ export function ProfileHeader({
                   title="Friends & Challenges"
                 >
                   <span className="friends-icon">👥</span>
-                  <span className="friends-text">Friends</span>
+                  <span className="friends-text">{t.friends}</span>
                   {pendingRequestsCount && pendingRequestsCount > 0 ? (
                     <span className="friends-badge">{pendingRequestsCount}</span>
                   ) : null}
@@ -169,7 +258,7 @@ export function ProfileHeader({
                   }}
                 >
                   <span>🏆</span>
-                  <span>Tourneys</span>
+                  <span>{t.tourneys}</span>
                 </button>
               )}
 
@@ -195,7 +284,7 @@ export function ProfileHeader({
                   }}
                 >
                   <span>📺</span>
-                  <span>+100 Gold</span>
+                  <span>{t.ads}</span>
                 </button>
               )}
 
@@ -221,7 +310,7 @@ export function ProfileHeader({
                   }}
                 >
                   <span>🛡️</span>
-                  <span>Mod</span>
+                  <span>{t.mod}</span>
                 </button>
               )}
 
@@ -249,7 +338,7 @@ export function ProfileHeader({
                 className="btn btn-ghost btn-sm"
                 onClick={logout}
               >
-                Sign Out
+                {t.signOut}
               </button>
             </>
           ) : (
@@ -258,7 +347,7 @@ export function ProfileHeader({
               className="btn btn-primary btn-sm"
               onClick={openAuthModal}
             >
-              Sign In
+              {t.signIn}
             </button>
           )}
         </div>

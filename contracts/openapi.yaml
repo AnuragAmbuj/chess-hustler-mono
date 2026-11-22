@@ -442,6 +442,38 @@ paths:
                 $ref: '#/components/schemas/PlayerGamesPage'
         '404':
           $ref: '#/components/responses/ErrorResponse'
+  /v1/leaderboards:
+    get:
+      operationId: getLeaderboard
+      summary: Retrieve top-ranked players by pool
+      tags:
+        - ratings
+        - leaderboards
+      parameters:
+        - name: pool
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [bullet, blitz, rapid, classical]
+            default: blitz
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        '200':
+          description: Leaderboard snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaderboardResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
   /v1/matchmaking/queue:
     post:
       operationId: joinMatchmakingQueue
@@ -3581,6 +3613,67 @@ components:
           type: integer
         prize_config:
           type: object
+    LeaderboardEntry:
+      type: object
+      required:
+        - rank
+        - user_id
+        - handle
+        - rating
+        - rd
+        - games_count
+      properties:
+        rank:
+          type: integer
+          example: 1
+        user_id:
+          type: string
+          format: uuid
+        handle:
+          type: string
+          example: gukesh_d
+        display_name:
+          type: string
+          example: D Gukesh
+        rating:
+          type: integer
+          example: 2750
+        rd:
+          type: number
+          example: 45.2
+        peak_rating:
+          type: integer
+          example: 2780
+        games_count:
+          type: integer
+          example: 320
+        win_count:
+          type: integer
+          example: 210
+        loss_count:
+          type: integer
+          example: 45
+        draw_count:
+          type: integer
+          example: 65
+    LeaderboardResponse:
+      type: object
+      required:
+        - pool
+        - updated_at
+        - entries
+      properties:
+        pool:
+          type: string
+          enum: [bullet, blitz, rapid, classical]
+        updated_at:
+          type: string
+          format: date-time
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaderboardEntry'
+
 
 
 

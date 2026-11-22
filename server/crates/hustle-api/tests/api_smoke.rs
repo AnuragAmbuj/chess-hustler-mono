@@ -50,6 +50,13 @@ async fn meta_config_reflects_economy_defaults() {
 }
 
 #[tokio::test]
+async fn leaderboards_rejects_invalid_pool() {
+    let (status, body) = get_body("/v1/leaderboards?pool=unknown_pool").await;
+    assert_eq!(status, 400);
+    assert!(body.contains(r#""code":"invalid_pool""#), "body: {body}");
+}
+
+#[tokio::test]
 async fn unknown_path_is_404() {
     let (status, _) = get_body("/v1/nope").await;
     assert_eq!(status, 404);

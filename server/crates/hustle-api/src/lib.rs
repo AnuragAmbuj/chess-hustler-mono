@@ -10,6 +10,7 @@ pub mod cosmetics;
 pub mod error;
 pub mod friends;
 pub mod games;
+pub mod leaderboards;
 pub mod matchmaking;
 pub mod me;
 pub mod moderation;
@@ -149,6 +150,7 @@ pub const ROUTES: &[(http::Method, &str)] = &[
     (http::Method::GET, "/v1/me/achievements"),
     (http::Method::GET, "/v1/players/{handle}"),
     (http::Method::GET, "/v1/players/{handle}/games"),
+    (http::Method::GET, "/v1/leaderboards"),
     (http::Method::POST, "/v1/matchmaking/queue"),
     (http::Method::DELETE, "/v1/matchmaking/queue"),
     (http::Method::GET, "/v1/matchmaking/status"),
@@ -247,6 +249,7 @@ pub fn router(state: AppState) -> Router {
         .route("/v1/me/achievements", get(rewards::get_my_achievements))
         .route("/v1/players/{handle}", get(me::get_player_profile))
         .route("/v1/players/{handle}/games", get(me::get_player_games))
+        .route("/v1/leaderboards", get(leaderboards::get_leaderboard))
         .route(
             "/v1/matchmaking/queue",
             post(matchmaking::queue_join).delete(matchmaking::queue_leave),

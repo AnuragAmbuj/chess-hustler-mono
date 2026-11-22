@@ -83,6 +83,20 @@ The project is organized as a monorepo containing the Rust server workspace, Ope
 - Offline anomaly analyzer flags rapid resignation farming, collusion patterns, and engine-like move agreement ratios.
 - Administrative console provides user lookup, manual sanctioning (warn, mute, suspend, ban), and grievance reporting.
 
+### Leaderboards and Ranking Snapshots
+- Weekly top-50 rating snapshots across Bullet, Blitz, Rapid, and Classical pools.
+- Queries enforce active account status and provisional rating filters.
+- Client modal presents rank podiums, rating peaks, and lifetime win-rate statistics.
+
+### Localization and Accessibility
+- Complete bilingual UI supporting English and Hindi (हिन्दी) across all lobby flows, game views, and modals.
+- Persistent language switching stored in local storage and applied directly to DOM language attributes.
+
+### Calibrated Bot Engines and Tactical Puzzles
+- Multi-tier offline and practice engines spanning Novice (1000 ELO), Club Grinder (1500 ELO), and Master (2000 ELO) search depths.
+- Daily tactical chess puzzles featuring Forsyth-Edwards Notation (FEN) state reconstruction, solution validation, and virtual Gold completion rewards.
+- Live GM match observation with read-only spectator channels.
+
 ## Getting Started
 
 ### Prerequisites
@@ -158,6 +172,20 @@ cargo clippy --manifest-path server/Cargo.toml --workspace --all-targets -- -D w
 Verifies TypeScript compilation and production bundling:
 ```bash
 cd web && npm run build
+```
+
+### Security Audit Suite
+Verifies authorization boundaries and authentication barriers:
+```bash
+cargo test --manifest-path server/Cargo.toml -p hustle-api --test security_audit
+```
+
+### Concurrency and Load Testing
+Executes k6 load scripts for WebSockets, queue storms, and ad verification:
+```bash
+k6 run infra/k6/ws_load.js
+k6 run infra/k6/matchmaking_storm.js
+k6 run infra/k6/ads_burst.js
 ```
 
 ## License

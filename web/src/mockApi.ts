@@ -291,6 +291,27 @@ export function mockApiPlugin(): Plugin {
         }
 
         // 8. Matchmaking & Realtime ticket
+        if (url.startsWith('/v1/leaderboards')) {
+          const poolMatch = url.match(/pool=([a-z]+)/);
+          const pool = poolMatch ? poolMatch[1] : 'blitz';
+          const mockEntries = [
+            { rank: 1, user_id: 'usr_gukesh', handle: 'gukesh_d', display_name: 'D Gukesh (GM)', rating: 2795, rd: 38.2, peak_rating: 2805, games_count: 512, win_count: 340, loss_count: 42, draw_count: 130 },
+            { rank: 2, user_id: 'usr_pragg', handle: 'pragg_r', display_name: 'R Praggnanandhaa (GM)', rating: 2772, rd: 40.1, peak_rating: 2788, games_count: 480, win_count: 310, loss_count: 50, draw_count: 120 },
+            { rank: 3, user_id: 'usr_erigaisi', handle: 'erigaisi_a', display_name: 'Arjun Erigaisi (GM)', rating: 2765, rd: 42.5, peak_rating: 2790, games_count: 620, win_count: 410, loss_count: 70, draw_count: 140 },
+            { rank: 4, user_id: 'usr_vidit', handle: 'vidit_g', display_name: 'Vidit Gujrathi (GM)', rating: 2740, rd: 44.0, peak_rating: 2760, games_count: 450, win_count: 280, loss_count: 55, draw_count: 115 },
+            { rank: 5, user_id: 'usr_humpy', handle: 'humpy_k', display_name: 'Koneru Humpy (GM)', rating: 2715, rd: 45.3, peak_rating: 2735, games_count: 390, win_count: 245, loss_count: 45, draw_count: 100 },
+            { rank: 6, user_id: 'usr_harikrishna', handle: 'harikrishna_p', display_name: 'P Harikrishna (GM)', rating: 2705, rd: 46.1, peak_rating: 2740, games_count: 410, win_count: 250, loss_count: 52, draw_count: 108 },
+            { rank: 7, user_id: 'usr_nihal', handle: 'nihal_sarin', display_name: 'Nihal Sarin (GM)', rating: 2690, rd: 48.0, peak_rating: 2720, games_count: 720, win_count: 490, loss_count: 85, draw_count: 145 },
+            { rank: 8, user_id: 'usr_vaishali', handle: 'vaishali_r', display_name: 'R Vaishali (GM)', rating: 2650, rd: 49.5, peak_rating: 2675, games_count: 360, win_count: 220, loss_count: 48, draw_count: 92 },
+            { rank: 9, user_id: 'usr_raunak', handle: 'raunak_sadhwani', display_name: 'Raunak Sadhwani (GM)', rating: 2640, rd: 51.2, peak_rating: 2665, games_count: 430, win_count: 270, loss_count: 62, draw_count: 98 },
+            { rank: 10, user_id: 'usr_vikram', handle: 'grandmaster_vikram', display_name: 'Vikram Joshi (IM)', rating: 2450, rd: 55.0, peak_rating: 2480, games_count: 310, win_count: 190, loss_count: 50, draw_count: 70 },
+          ];
+          return sendJson(200, {
+            pool,
+            updated_at: new Date().toISOString(),
+            entries: mockEntries,
+          });
+        }
         if (url === '/v1/matchmaking/queue' && method === 'POST') {
           return sendJson(200, { queued: true, est_wait_s: 3 });
         }
