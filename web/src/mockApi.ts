@@ -4,6 +4,28 @@ export function mockApiPlugin(): Plugin {
   return {
     name: 'chess-hustle-mock-api',
     configureServer(server) {
+      // 1. Intercept scanner probes, dotfiles, and traversal requests before Vite transform middleware
+      server.middlewares.use((req: any, res: any, next: any) => {
+        const rawUrl: string = req.url || '';
+        const pathname = rawUrl.split('?')[0] || '';
+        if (
+          pathname.startsWith('/.') ||
+          pathname.includes('/.') ||
+          pathname.includes('..') ||
+          pathname.includes('etc/passwd') ||
+          pathname.includes('proc/self') ||
+          pathname.endsWith('.env') ||
+          pathname.endsWith('.php') ||
+          pathname.endsWith('.git')
+        ) {
+          res.statusCode = 404;
+          res.setHeader('Content-Type', 'text/plain');
+          return res.end('Not Found');
+        }
+        next();
+      });
+
+      // 2. Mock API routes
       server.middlewares.use((req: any, res: any, next: any) => {
         const url: string = req.url || '';
         const method: string = req.method || 'GET';
@@ -19,7 +41,29 @@ export function mockApiPlugin(): Plugin {
           res.end(JSON.stringify(data));
         };
 
-        // 1. Auth endpoints
+        // 1. Auth & Meta endpoints
+        if (url === '/v1/meta/config') {
+          return sendJson(200, {
+            env: 'development',
+            version: '0.1.0',
+            welcome_gold: 50000,
+            gold_per_win: 25,
+            gold_per_ad: 2000,
+            max_per_day: 5,
+            ad_cooldown_s: 300,
+            time_controls: [
+              { initial_s: 60, increment_s: 0, pool: 'bullet' },
+              { initial_s: 60, increment_s: 2, pool: 'bullet' },
+              { initial_s: 180, increment_s: 0, pool: 'blitz' },
+              { initial_s: 180, increment_s: 2, pool: 'blitz' },
+              { initial_s: 300, increment_s: 0, pool: 'blitz' },
+              { initial_s: 600, increment_s: 0, pool: 'rapid' },
+              { initial_s: 600, increment_s: 5, pool: 'rapid' },
+              { initial_s: 900, increment_s: 10, pool: 'classical' },
+              { initial_s: 1800, increment_s: 20, pool: 'classical' },
+            ],
+          });
+        }
         if (url === '/v1/auth/otp/send' && method === 'POST') {
           return sendJson(200, { status: 'ok', message: 'OTP sent to mobile' });
         }
