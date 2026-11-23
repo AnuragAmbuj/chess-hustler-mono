@@ -3070,4 +3070,207 @@ button, input, select {
   font-weight: 500;
 }
 
+/* ==========================================================================
+   Comprehensive Mobile & Tablet Responsive Design (Phase 4 & PRD G5)
+   ========================================================================== */
+
+/* Tablet & Mobile Header (<= 860px) */
+@media (max-width: 860px) {
+  .site-header {
+    padding: 0;
+  }
+
+  .header-inner {
+    padding: 8px 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .header-brand {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .brand-symbol {
+    font-size: 22px;
+  }
+
+  .brand-name {
+    font-size: 1.05rem;
+  }
+
+  .brand-tagline {
+    font-size: 0.65rem;
+  }
+
+  /* Horizontal scrollable action rail for chips */
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    margin: 0 -4px;
+  }
+
+  .header-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .header-actions > * {
+    flex-shrink: 0;
+  }
+
+  .streak-chip,
+  .gold-chip,
+  .user-profile-chip,
+  .piece-theme-picker,
+  .theme-toggle-btn {
+    padding: 4px 8px;
+    font-size: 0.78rem;
+  }
+}
+
+/* Mobile Screens (<= 640px) */
+@media (max-width: 640px) {
+  .lobby-main {
+    padding: 14px 10px 48px;
+    gap: 16px;
+  }
+
+  .lobby-hero-card {
+    padding: 16px 14px;
+    gap: 16px;
+    border-radius: 8px;
+  }
+
+  .hero-title {
+    font-size: 1.35rem;
+    line-height: 1.25;
+  }
+
+  .hero-subtitle {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .hero-cta-group {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .cta-button-row {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .cta-button-row .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 16px;
+    font-size: 0.92rem;
+  }
+
+  /* Modals Mobile Sizing */
+  .modal-backdrop {
+    padding: 8px;
+  }
+
+  .modal-card {
+    padding: 16px 12px;
+    max-height: 92vh;
+    width: 98% !important;
+    border-radius: 8px;
+  }
+
+  .modal-header {
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+  }
+
+  .modal-title {
+    font-size: 1.1rem;
+  }
+
+  /* Game Stage & Board Mobile Layout */
+  .game-stage {
+    padding: 8px 6px 32px;
+    gap: 10px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .player-bar {
+    padding: 6px 10px;
+    border-radius: 6px;
+  }
+
+  .player-handle {
+    font-size: 0.85rem;
+  }
+
+  .clock-timer {
+    padding: 4px 8px;
+    font-size: 1.12rem;
+    min-width: 68px;
+  }
+
+  .chess-board-frame {
+    border-radius: 6px;
+    max-width: min(100vw - 12px, 560px);
+    margin: 0 auto;
+  }
+
+  .coord {
+    font-size: 9px;
+  }
+
+  .sidebar-card {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .controls-button-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    width: 100%;
+  }
+
+  .controls-button-group .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Extra Small Phones (<= 480px) */
+@media (max-width: 480px) {
+  .dashboard-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .stat-card {
+    padding: 12px 14px;
+  }
+
+  .stat-card-value {
+    font-size: 1.35rem;
+  }
+
+  .pool-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+
 

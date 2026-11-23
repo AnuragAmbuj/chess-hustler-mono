@@ -110,109 +110,111 @@ export const LeaderboardsModal: React.FC<LeaderboardsModalProps> = ({
               No rated players found in this pool yet.
             </div>
           ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left', color: 'var(--text-secondary)' }}>
-                  <th style={{ padding: '0.6rem 0.5rem', width: '60px' }}>{t.rank}</th>
-                  <th style={{ padding: '0.6rem 0.5rem' }}>{t.player}</th>
-                  <th style={{ padding: '0.6rem 0.5rem', textAlign: 'right' }}>{t.rating}</th>
-                  <th style={{ padding: '0.6rem 0.5rem', textAlign: 'right' }}>{t.peak}</th>
-                  <th style={{ padding: '0.6rem 0.5rem', textAlign: 'right' }}>{t.games}</th>
-                  <th style={{ padding: '0.6rem 0.5rem', textAlign: 'right' }}>{t.winRate}</th>
-                  {onChallengePlayer && <th style={{ padding: '0.6rem 0.5rem', textAlign: 'center', width: '90px' }}>Action</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {entries.map((entry) => {
-                  const winRate =
-                    entry.games_count > 0
-                      ? Math.round((entry.win_count / entry.games_count) * 100)
-                      : 0;
+            <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <table style={{ width: '100%', minWidth: '540px', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--border-color)', textAlign: 'left', color: 'var(--text-secondary)' }}>
+                    <th style={{ padding: '0.6rem 0.5rem', width: '60px' }}>{t.rank}</th>
+                    <th style={{ padding: '0.6rem 0.5rem' }}>{t.player}</th>
+                    <th style={{ padding: '0.6rem 0.5rem', textAlign: 'right' }}>{t.rating}</th>
+                    <th style={{ padding: '0.6rem 0.5rem', textAlign: 'right' }}>{t.peak}</th>
+                    <th style={{ padding: '0.6rem 0.5rem', textAlign: 'right' }}>{t.games}</th>
+                    <th style={{ padding: '0.6rem 0.5rem', textAlign: 'right' }}>{t.winRate}</th>
+                    {onChallengePlayer && <th style={{ padding: '0.6rem 0.5rem', textAlign: 'center', width: '90px' }}>Action</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {entries.map((entry) => {
+                    const winRate =
+                      entry.games_count > 0
+                        ? Math.round((entry.win_count / entry.games_count) * 100)
+                        : 0;
 
-                  return (
-                    <tr
-                      key={entry.user_id}
-                      style={{
-                        borderBottom: '1px solid var(--border-color)',
-                        transition: 'background 0.15s ease',
-                      }}
-                    >
-                      <td style={{ padding: '0.65rem 0.5rem' }}>{getRankBadge(entry.rank)}</td>
-                      <td style={{ padding: '0.65rem 0.5rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span
-                            style={{
-                              width: '28px',
-                              height: '28px',
-                              borderRadius: '50%',
-                              background: 'var(--accent-glow, #3b82f620)',
-                              color: 'var(--accent, #3b82f6)',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontWeight: 600,
-                              fontSize: '0.75rem',
-                            }}
-                          >
-                            {entry.handle.slice(0, 2).toUpperCase()}
-                          </span>
-                          <div>
-                            <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                              {entry.display_name}
-                            </div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                              @{entry.handle}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td
+                    return (
+                      <tr
+                        key={entry.user_id}
                         style={{
-                          padding: '0.65rem 0.5rem',
-                          textAlign: 'right',
-                          fontWeight: 700,
-                          color: 'var(--accent, #3b82f6)',
+                          borderBottom: '1px solid var(--border-color)',
+                          transition: 'background 0.15s ease',
                         }}
                       >
-                        {entry.rating}
-                      </td>
-                      <td style={{ padding: '0.65rem 0.5rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
-                        {entry.peak_rating}
-                      </td>
-                      <td style={{ padding: '0.65rem 0.5rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
-                        {entry.games_count}
-                      </td>
-                      <td style={{ padding: '0.65rem 0.5rem', textAlign: 'right' }}>
-                        <span
+                        <td style={{ padding: '0.65rem 0.5rem' }}>{getRankBadge(entry.rank)}</td>
+                        <td style={{ padding: '0.65rem 0.5rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span
+                              style={{
+                                width: '28px',
+                                height: '28px',
+                                borderRadius: '50%',
+                                background: 'var(--accent-glow, #3b82f620)',
+                                color: 'var(--accent, #3b82f6)',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontWeight: 600,
+                                fontSize: '0.75rem',
+                              }}
+                            >
+                              {entry.handle.slice(0, 2).toUpperCase()}
+                            </span>
+                            <div>
+                              <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                                {entry.display_name}
+                              </div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                                @{entry.handle}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td
                           style={{
-                            padding: '0.15rem 0.4rem',
-                            borderRadius: '4px',
-                            background: winRate >= 60 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255,255,255,0.05)',
-                            color: winRate >= 60 ? '#22c55e' : 'inherit',
-                            fontWeight: 500,
+                            padding: '0.65rem 0.5rem',
+                            textAlign: 'right',
+                            fontWeight: 700,
+                            color: 'var(--accent, #3b82f6)',
                           }}
                         >
-                          {winRate}%
-                        </span>
-                      </td>
-                      {onChallengePlayer && (
-                        <td style={{ padding: '0.65rem 0.5rem', textAlign: 'center' }}>
-                          <button
-                            type="button"
-                            className="btn btn-ghost btn-sm"
-                            onClick={() => onChallengePlayer(entry.handle)}
-                            title={`Challenge @${entry.handle}`}
-                            style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
-                          >
-                            ⚔️
-                          </button>
+                          {entry.rating}
                         </td>
-                      )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        <td style={{ padding: '0.65rem 0.5rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
+                          {entry.peak_rating}
+                        </td>
+                        <td style={{ padding: '0.65rem 0.5rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
+                          {entry.games_count}
+                        </td>
+                        <td style={{ padding: '0.65rem 0.5rem', textAlign: 'right' }}>
+                          <span
+                            style={{
+                              padding: '0.15rem 0.4rem',
+                              borderRadius: '4px',
+                              background: winRate >= 60 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255,255,255,0.05)',
+                              color: winRate >= 60 ? '#22c55e' : 'inherit',
+                              fontWeight: 500,
+                            }}
+                          >
+                            {winRate}%
+                          </span>
+                        </td>
+                        {onChallengePlayer && (
+                          <td style={{ padding: '0.65rem 0.5rem', textAlign: 'center' }}>
+                            <button
+                              type="button"
+                              className="btn btn-ghost btn-sm"
+                              onClick={() => onChallengePlayer(entry.handle)}
+                              title={`Challenge @${entry.handle}`}
+                              style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
+                            >
+                              ⚔️
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>
