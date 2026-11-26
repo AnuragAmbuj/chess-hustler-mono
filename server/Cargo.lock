@@ -866,10 +866,12 @@ name = "hustle-identity"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "http",
  "hustle-gold",
  "hustle-testkit",
  "jsonwebtoken",
  "rand 0.9.5",
+ "redis",
  "serde",
  "serde_json",
  "sha2",

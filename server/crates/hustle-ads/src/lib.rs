@@ -117,4 +117,41 @@ mod tests {
         let result = verifier.verify(&callback);
         assert_eq!(result.unwrap_err(), AdReject::UnknownKeyId("nonexistent".into()));
     }
+
+    #[test]
+    fn test_admob_verifier_loads_keys_from_google_json() {
+        use p256::pkcs8::EncodePublicKey;
+        let signing_key = get_test_key(99);
+        let der = signing_key
+            .verifying_key()
+            .to_public_key_der()
+            .expect("der");
+        let b64 = STANDARD.encode(der.as_bytes());
+        let json = serde_json::json!({
+            "keys": [
+                {
+                    "keyId": 3335741209u64,
+                    "base64": b64
+                }
+            ]
+        })
+        .to_string();
+
+        let verifier = AdMobVerifier::new();
+        let count = verifier.load_from_json(&json).expect("load keys");
+        assert_eq!(count, 1);
+
+        let now_ms = OffsetDateTime::now_utc().unix_timestamp() * 1000;
+        let base_qs = format!(
+            "custom_data=as_json_1&timestamp={now_ms}&transaction_id=tx_json&user_id=77&key_id=3335741209"
+        );
+        let sig: p256::ecdsa::Signature = signing_key.sign(base_qs.as_bytes());
+        let sig_b64 = STANDARD.encode(sig.to_der().as_bytes());
+        let full_qs = format!("{base_qs}&signature={sig_b64}");
+
+        let verified = verifier
+            .verify(&RawCallback::from_query_string(&full_qs))
+            .expect("signature from json key should verify");
+        assert_eq!(verified.user_id, 77);
+    }
 }

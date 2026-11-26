@@ -14,7 +14,7 @@ pub mod sessions;
 pub mod signup;
 pub mod tokens;
 
-pub use otp::{LogOtpSender, OtpError, OtpSender, OtpService};
+pub use otp::{LogOtpSender, OtpError, OtpSender, OtpService, WhatsAppWebhookSender};
 pub use sessions::{SessionError, SessionStore, SsoUser};
 pub use signup::{
     Consents, ProfileInput, SignupError, SignupOutcome, SignupService, VerifiedIdentity,

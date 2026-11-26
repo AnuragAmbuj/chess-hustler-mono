@@ -22,8 +22,10 @@ services:
   migrate:
     image: postgres:16-alpine
     command: >
-      psql "postgresql://postgres:hustle@postgres:5432/hustle"
-      -v ON_ERROR_STOP=1 -f /migrations/0001_init.sql
+      sh -c 'for f in /migrations/*.sql; do
+        echo "Applying $f...";
+        psql "postgresql://postgres:hustle@postgres:5432/hustle" -v ON_ERROR_STOP=1 -f "$f";
+      done'
     volumes:
       - ../../server/migrations:/migrations:ro
     depends_on:
@@ -43,6 +45,9 @@ services:
     environment:
       CH_ENV: local
       CH_PORT: "8080"
+      CH_DATABASE_URL: "postgresql://postgres:hustle@postgres:5432/hustle"
+      CH_REDIS_URL: "redis://redis:6379/"
+      CH_RUN_MIGRATIONS: "false"
     ports:
       - "8080:8080"
     depends_on:

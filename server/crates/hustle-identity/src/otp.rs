@@ -40,6 +40,75 @@ impl OtpSender for LogOtpSender {
     }
 }
 
+/// WhatsApp HTTP webhook sender (works with a free self-hosted WhatsApp bridge
+/// sidecar such as WAHA/whatsmeow, or an internal Meta Cloud API gateway).
+pub struct WhatsAppWebhookSender {
+    endpoint: String,
+    token: Option<String>,
+}
+
+impl WhatsAppWebhookSender {
+    pub fn new(endpoint: String, token: Option<String>) -> Self {
+        Self { endpoint, token }
+    }
+}
+
+#[async_trait]
+impl OtpSender for WhatsAppWebhookSender {
+    async fn send(&self, phone: &str, code: &str) -> Result<(), OtpError> {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+        let uri: http::Uri = self.endpoint.parse().map_err(|_| OtpError::Delivery)?;
+        let host = uri.host().ok_or(OtpError::Delivery)?;
+        let port = uri.port_u16().unwrap_or(80);
+        let path = uri.path_and_query().map(|pq| pq.as_str()).unwrap_or("/");
+
+        let mut stream = tokio::net::TcpStream::connect((host, port))
+            .await
+            .map_err(|e| {
+                tracing::error!(error = %e, endpoint = %self.endpoint, "WhatsApp webhook connect failed");
+                OtpError::Delivery
+            })?;
+
+        let payload = serde_json::json!({
+            "phone": phone,
+            "chatId": format!("{}@c.us", phone.trim_start_matches('+')),
+            "text": format!("Your Chess Hustle verification code is {code}. It expires in 5 minutes."),
+            "code": code,
+        })
+        .to_string();
+
+        let auth_header = self
+            .token
+            .as_ref()
+            .map(|t| format!("Authorization: Bearer {t}\r\n"))
+            .unwrap_or_default();
+
+        let raw_req = format!(
+            "POST {path} HTTP/1.1\r\nHost: {host}:{port}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n{auth_header}\r\n{payload}",
+            payload.len()
+        );
+
+        stream.write_all(raw_req.as_bytes()).await.map_err(|e| {
+            tracing::error!(error = %e, "WhatsApp webhook write failed");
+            OtpError::Delivery
+        })?;
+
+        let mut resp_buf = [0u8; 256];
+        let n = stream.read(&mut resp_buf).await.map_err(|e| {
+            tracing::error!(error = %e, "WhatsApp webhook read failed");
+            OtpError::Delivery
+        })?;
+        let status_line = String::from_utf8_lossy(&resp_buf[..n]);
+        let is_2xx = status_line.starts_with("HTTP/1.1 2") || status_line.starts_with("HTTP/1.0 2");
+        if !is_2xx {
+            tracing::error!(response = %status_line.lines().next().unwrap_or(""), "WhatsApp webhook returned non-2xx");
+            return Err(OtpError::Delivery);
+        }
+        Ok(())
+    }
+}
+
 struct OtpEntry {
     code_hash: [u8; 32],
     expires_ms: u64,
@@ -64,9 +133,11 @@ const PHONE_MAX: usize = 3;
 const IP_WINDOW_MS: u64 = 60 * 60 * 1000;
 const IP_MAX: usize = 5;
 
-/// In-memory OTP service. `send`/`verify` are the only mutable surface.
+/// OTP service supporting Redis-backed distributed state (production) and
+/// in-memory ephemeral state (unit tests).
 pub struct OtpService {
     sender: Box<dyn OtpSender>,
+    redis: Option<redis::Client>,
     entries: Mutex<std::collections::HashMap<String, OtpEntry>>,
     phone_log: Mutex<std::collections::HashMap<String, VecDeque<u64>>>,
     ip_log: Mutex<std::collections::HashMap<String, VecDeque<u64>>>,
@@ -76,10 +147,38 @@ impl OtpService {
     pub fn new(sender: Box<dyn OtpSender>) -> Self {
         Self {
             sender,
+            redis: None,
             entries: Mutex::default(),
             phone_log: Mutex::default(),
             ip_log: Mutex::default(),
         }
+    }
+
+    pub fn with_redis(sender: Box<dyn OtpSender>, redis: redis::Client) -> Self {
+        Self {
+            sender,
+            redis: Some(redis),
+            entries: Mutex::default(),
+            phone_log: Mutex::default(),
+            ip_log: Mutex::default(),
+        }
+    }
+
+    async fn redis_incr_within_limit(
+        conn: &mut redis::aio::MultiplexedConnection,
+        key: &str,
+        window_s: i64,
+        max: i64,
+    ) -> Result<bool, OtpError> {
+        use redis::AsyncCommands;
+        let count: i64 = conn.incr(key, 1).await.map_err(|_| OtpError::Delivery)?;
+        if count == 1 {
+            let _: bool = conn
+                .expire(key, window_s)
+                .await
+                .map_err(|_| OtpError::Delivery)?;
+        }
+        Ok(count <= max)
     }
 
     fn within_window(
@@ -109,6 +208,47 @@ impl OtpService {
         if !crate::is_e164(phone) {
             return Err(OtpError::BadPhone);
         }
+        if let Some(client) = &self.redis {
+            use redis::AsyncCommands;
+            let mut conn = client
+                .get_multiplexed_async_connection()
+                .await
+                .map_err(|_| OtpError::Delivery)?;
+            if !Self::redis_incr_within_limit(
+                &mut conn,
+                &format!("otp:rl:ip:{ip}"),
+                (IP_WINDOW_MS / 1000) as i64,
+                IP_MAX as i64,
+            )
+            .await?
+            {
+                return Err(OtpError::RateLimited);
+            }
+            if !Self::redis_incr_within_limit(
+                &mut conn,
+                &format!("otp:rl:phone:{phone}"),
+                (PHONE_WINDOW_MS / 1000) as i64,
+                PHONE_MAX as i64,
+            )
+            .await?
+            {
+                return Err(OtpError::RateLimited);
+            }
+
+            let code: String = rand::rng().random_range(100_000..1_000_000).to_string();
+            let digest = hash(&code);
+            let payload = serde_json::json!({
+                "hash": digest.to_vec(),
+                "attempts": 0u32,
+            })
+            .to_string();
+            let _: () = conn
+                .set_ex(format!("otp:code:{phone}"), payload, OTP_TTL_MS / 1000)
+                .await
+                .map_err(|_| OtpError::Delivery)?;
+            return self.sender.send(phone, &code).await;
+        }
+
         let now = now_ms();
         if !Self::within_window(
             &mut self.ip_log.lock().unwrap(),
@@ -148,6 +288,42 @@ impl OtpService {
         if !crate::is_e164(phone) {
             return Err(OtpError::BadPhone);
         }
+        if let Some(client) = &self.redis {
+            use redis::AsyncCommands;
+            #[derive(serde::Deserialize, serde::Serialize)]
+            struct RedisOtp {
+                hash: Vec<u8>,
+                attempts: u32,
+            }
+            let mut conn = client
+                .get_multiplexed_async_connection()
+                .await
+                .map_err(|_| OtpError::Delivery)?;
+            let key = format!("otp:code:{phone}");
+            let raw: Option<String> = conn.get(&key).await.map_err(|_| OtpError::Delivery)?;
+            let Some(json_str) = raw else {
+                return Err(OtpError::Invalid);
+            };
+            let mut entry: RedisOtp =
+                serde_json::from_str(&json_str).map_err(|_| OtpError::Invalid)?;
+            if entry.attempts >= MAX_ATTEMPTS {
+                let _: i64 = conn.del(&key).await.map_err(|_| OtpError::Delivery)?;
+                return Err(OtpError::RateLimited);
+            }
+            if entry.hash.as_slice() == hash(code) {
+                let _: i64 = conn.del(&key).await.map_err(|_| OtpError::Delivery)?;
+                return Ok(());
+            }
+            entry.attempts += 1;
+            let ttl: i64 = conn.ttl(&key).await.unwrap_or(60).max(1);
+            let updated = serde_json::to_string(&entry).map_err(|_| OtpError::Delivery)?;
+            let _: () = conn
+                .set_ex(&key, updated, ttl as u64)
+                .await
+                .map_err(|_| OtpError::Delivery)?;
+            return Err(OtpError::Invalid);
+        }
+
         let now = now_ms();
         let mut entries = self.entries.lock().unwrap();
         let Some(entry) = entries.get_mut(phone) else {

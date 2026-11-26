@@ -21,6 +21,8 @@ pub mod tournaments;
 
 use axum::{
     extract::State,
+    http::StatusCode,
+    response::IntoResponse,
     routing::{delete, get, post},
     Json, Router,
 };
@@ -36,6 +38,7 @@ use std::sync::Arc;
 pub struct AppState {
     pub config: ServerConfig,
     pub pool: sqlx::PgPool,
+    pub redis: redis::Client,
     pub otp: Arc<OtpService>,
     pub signup: Arc<SignupService>,
     pub sessions: Arc<SessionStore>,
@@ -50,12 +53,13 @@ pub struct AppState {
     pub moderation_service: Arc<hustle_moderation::ModerationService>,
     pub cosmetics_service: Arc<hustle_cosmetics::CosmeticsService>,
     pub reward_service: Arc<hustle_rewards::RewardService>,
+    pub ad_verifier: Arc<hustle_ads::AdMobVerifier>,
     pub ads_service: Arc<hustle_ads::AdsService>,
     pub tournament_service: Arc<hustle_tournaments::TournamentService>,
 }
 
 impl AppState {
-    /// Standard wiring: services over one pool, dev OTP sender (logs codes).
+    /// Standard wiring: services over PostgreSQL and Redis.
     pub fn build(config: ServerConfig, pool: sqlx::PgPool) -> Self {
         let tokens = Arc::new(TokenService::new(config.jwt_secret.as_bytes()));
         let signup = Arc::new(SignupService::new(
@@ -63,10 +67,23 @@ impl AppState {
             TokenService::new(config.jwt_secret.as_bytes()),
             config.welcome_gold,
         ));
-        let otp = Arc::new(OtpService::new(Box::new(hustle_identity::LogOtpSender)));
+        let redis_client = redis::Client::open(config.redis_url.as_str()).expect("valid redis url");
+        let otp_sender: Box<dyn hustle_identity::OtpSender> = match (
+            config.otp_provider.as_str(),
+            config.whatsapp_webhook_url.as_ref(),
+        ) {
+            ("whatsapp", Some(url)) => {
+                tracing::info!(endpoint = %url, "using WhatsApp webhook OTP sender");
+                Box::new(hustle_identity::WhatsAppWebhookSender::new(
+                    url.clone(),
+                    config.whatsapp_webhook_token.clone(),
+                ))
+            }
+            _ => Box::new(hustle_identity::LogOtpSender),
+        };
+        let otp = Arc::new(OtpService::with_redis(otp_sender, redis_client.clone()));
         let sessions = Arc::new(SessionStore::new(pool.clone()));
         let ledger = Arc::new(PgGoldLedger::new(pool.clone()));
-        let redis_client = redis::Client::open(config.redis_url.as_str()).expect("valid redis url");
         let matchmaking = Arc::new(MatchmakingService::new(pool.clone(), redis_client.clone()));
         let ticket_store = Arc::new(hustle_realtime::TicketStore::new(redis_client.clone()));
         let publisher = Arc::new(hustle_realtime::EventPublisher::new(redis_client.clone()));
@@ -90,11 +107,27 @@ impl AppState {
         let cosmetics_service = Arc::new(hustle_cosmetics::CosmeticsService::new(pool.clone()));
         let reward_service = Arc::new(hustle_rewards::RewardService::new(pool.clone()));
         let ad_verifier = Arc::new(hustle_ads::AdMobVerifier::new());
-        let ads_service = Arc::new(hustle_ads::AdsService::new(pool.clone(), ad_verifier));
+        if let Some(ref json) = config.admob_keys_json {
+            match ad_verifier.load_from_json(json) {
+                Ok(n) => tracing::info!(count = n, "loaded AdMob SSV keys from CH_ADMOB_KEYS_JSON"),
+                Err(e) => tracing::error!(error = %e, "failed to parse CH_ADMOB_KEYS_JSON"),
+            }
+        }
+        if let Some(ref path) = config.admob_keys_file {
+            match std::fs::read_to_string(path) {
+                Ok(contents) => match ad_verifier.load_from_json(&contents) {
+                    Ok(n) => tracing::info!(count = n, path = %path, "loaded AdMob SSV keys from file"),
+                    Err(e) => tracing::error!(error = %e, path = %path, "failed to parse AdMob keys file"),
+                },
+                Err(e) => tracing::error!(error = %e, path = %path, "failed to read AdMob keys file"),
+            }
+        }
+        let ads_service = Arc::new(hustle_ads::AdsService::new(pool.clone(), ad_verifier.clone()));
         let tournament_service = Arc::new(hustle_tournaments::TournamentService::new(pool.clone()));
         Self {
             config,
             pool,
+            redis: redis_client,
             otp,
             signup,
             sessions,
@@ -109,6 +142,7 @@ impl AppState {
             moderation_service,
             cosmetics_service,
             reward_service,
+            ad_verifier,
             ads_service,
             tournament_service,
         }
@@ -120,7 +154,9 @@ impl AppState {
         let pool = sqlx::postgres::PgPoolOptions::new()
             .connect_lazy("postgres://127.0.0.1:54329/hustle_stub")
             .expect("lazy stub pool");
-        Self::build(config, pool)
+        let mut state = Self::build(config, pool);
+        state.otp = Arc::new(OtpService::new(Box::new(hustle_identity::LogOtpSender)));
+        state
     }
 }
 
@@ -379,9 +415,40 @@ async fn healthz() -> Json<serde_json::Value> {
     Json(json!({ "status": "ok" }))
 }
 
-/// Readiness — Phase 0 always ready; Phase 1 adds DB/Redis round-trips.
-async fn readyz() -> Json<serde_json::Value> {
-    Json(json!({ "status": "ready" }))
+/// Readiness — verifies live PostgreSQL and Redis connectivity with a short timeout.
+async fn readyz(State(state): State<AppState>) -> impl IntoResponse {
+    let timeout = std::time::Duration::from_secs(2);
+    let pg_ok = tokio::time::timeout(
+        timeout,
+        sqlx::query_scalar::<_, i32>("SELECT 1").fetch_one(&state.pool),
+    )
+    .await
+    .map(|r| r.is_ok())
+    .unwrap_or(false);
+
+    let redis_ok = tokio::time::timeout(timeout, async {
+        match state.redis.get_multiplexed_async_connection().await {
+            Ok(mut conn) => redis::cmd("PING")
+                .query_async::<String>(&mut conn)
+                .await
+                .is_ok(),
+            Err(_) => false,
+        }
+    })
+    .await
+    .unwrap_or(false);
+
+    if pg_ok && redis_ok {
+        (
+            StatusCode::OK,
+            Json(json!({ "status": "ready", "postgres": true, "redis": true })),
+        )
+    } else {
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            Json(json!({ "status": "not_ready", "postgres": pg_ok, "redis": redis_ok })),
+        )
+    }
 }
 
 /// Public client boot config. Values shown to users MUST come from here or

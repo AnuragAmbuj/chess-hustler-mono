@@ -31,10 +31,10 @@ async fn healthz_is_ok() {
 }
 
 #[tokio::test]
-async fn readyz_is_ok() {
+async fn readyz_reports_not_ready_when_dependencies_down() {
     let (status, body) = get_body("/readyz").await;
-    assert_eq!(status, 200);
-    assert_eq!(body, r#"{"status":"ready"}"#);
+    assert_eq!(status, 503);
+    assert!(body.contains(r#""status":"not_ready""#), "body: {body}");
 }
 
 #[tokio::test]

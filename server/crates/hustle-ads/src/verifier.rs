@@ -53,6 +53,45 @@ impl AdMobVerifier {
         self.register_key(key_id, key);
         Ok(())
     }
+
+    /// Load AdMob SSV public keys from Google's `verifier-keys.json` format:
+    /// `{ "keys": [{ "keyId": 3335741209, "pem": "-----BEGIN PUBLIC KEY-----...", "base64": "..." }] }`.
+    pub fn load_from_json(&self, json_str: &str) -> Result<usize, String> {
+        #[derive(serde::Deserialize)]
+        struct KeyEntry {
+            #[serde(rename = "keyId")]
+            key_id: serde_json::Value,
+            pem: Option<String>,
+            base64: Option<String>,
+        }
+        #[derive(serde::Deserialize)]
+        struct KeysDoc {
+            keys: Vec<KeyEntry>,
+        }
+
+        let doc: KeysDoc =
+            serde_json::from_str(json_str).map_err(|e| format!("invalid keys JSON: {e}"))?;
+        let mut loaded = 0usize;
+        for entry in doc.keys {
+            let key_id = match entry.key_id {
+                serde_json::Value::String(s) => s,
+                serde_json::Value::Number(n) => n.to_string(),
+                other => return Err(format!("unsupported keyId type: {other}")),
+            };
+            if let Some(b64) = entry.base64.as_deref() {
+                self.register_key_base64(&key_id, b64)?;
+                loaded += 1;
+            } else if let Some(pem) = entry.pem.as_deref() {
+                let key = VerifyingKey::from_public_key_pem(pem)
+                    .map_err(|e| format!("invalid PEM key for {key_id}: {e}"))?;
+                self.register_key(&key_id, key);
+                loaded += 1;
+            } else {
+                return Err(format!("key {key_id} has neither base64 nor pem"));
+            }
+        }
+        Ok(loaded)
+    }
 }
 
 impl AdVerifier for AdMobVerifier {

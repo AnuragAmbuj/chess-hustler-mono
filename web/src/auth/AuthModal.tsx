@@ -94,8 +94,8 @@ export function AuthModal() {
             </h2>
             <p className="modal-sub">
               {step === 'phone'
-                ? 'Enter your phone number to receive a one-time login code.'
-                : `Enter the code sent to ${phone} and configure your privacy settings.`}
+                ? 'Enter your WhatsApp number to receive a one-time login code.'
+                : `Enter the WhatsApp code sent to ${phone} and configure your privacy settings.`}
             </p>
           </div>
           <button
@@ -133,7 +133,7 @@ export function AuthModal() {
                 />
               </div>
               <span className="form-hint">
-                Include country code (e.g. +91 for India). Standard SMS rates apply.
+                Include country code (e.g. +91 for India). We will send your 6-digit login code on WhatsApp.
               </span>
             </div>
 

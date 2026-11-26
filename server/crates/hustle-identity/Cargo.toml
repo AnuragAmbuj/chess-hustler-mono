@@ -5,14 +5,17 @@ edition.workspace = true
 
 [dependencies]
 async-trait = { workspace = true }
+http = { workspace = true }
 hustle-gold = { path = "../hustle-gold" }
 rand = "0.9"
+redis = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = "0.10"
 sqlx = { workspace = true }
 thiserror = { workspace = true }
 time = { workspace = true }
+tokio = { workspace = true }
 tracing = { workspace = true }
 jsonwebtoken = { workspace = true }
 ulid = { workspace = true }
